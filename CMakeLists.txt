@@ -47,7 +47,7 @@ target_link_libraries(time_shifters BA ${SDL_LIBS} compiler_flags)
 
 #INSTALLATION
 install(
-	DIRECTORY ${PROJECT_SOURCE_DIR}/dirs DESTINATION share
+	DIRECTORY ${PROJECT_SOURCE_DIR}/dirs/ DESTINATION share
 )
 install(
 	TARGETS time_shifters

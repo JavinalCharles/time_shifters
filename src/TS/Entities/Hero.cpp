@@ -118,9 +118,13 @@ Hero::Hero(SharedContext* context) :
 	// Key and Button Bindings
 	this->setMouseButtonBindings(mc);
 	this->setKeyBindings(kc);
+	// SPRITE
+	sprite->setDrawLayer(32);
+	sprite->setSortOrder(200);
+
 
 	this->setPosition({128.f, 128.f});
-	this->setScale({2.f, 2.f});
+	this->setScale({2.0f, 2.0f});
 
 	velocity->setMax({256.f, 256.f});
 
@@ -174,6 +178,53 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 	std::clog << "Hero::setKeyBindings();" << std::endl;
 	auto a = this->getComponent<Animation>();
 	auto v = this->getComponent<Velocity>();
+	ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
+	ba::KeyboardInput* ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>().get();
+
+
+	auto runUp = std::bind([a, ki, v]() {
+		IDtype curr = a->getCurrentAnimationID();
+		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
+			return;
+		}
+		if (ki->isKeyActive(SDLK_d)) {
+			a->set(HERO_RUN);
+		}
+		else if (ki->isKeyActive(SDLK_a)) {
+			a->set(HERO_RUN_LEFT);
+		}
+		else {
+			if (curr == HERO_IDLE) {
+				a->set(HERO_RUN);
+			}
+			else {
+				a->set(HERO_RUN_LEFT);
+			}
+		}
+		v->moveUp();
+	});
+
+	auto runDown = std::bind([a, ki, v]() {
+		IDtype curr = a->getCurrentAnimationID();
+		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
+			return;
+		}
+		if (ki->isKeyActive(SDLK_d)) {
+			a->set(HERO_RUN);
+		}
+		else if (ki->isKeyActive(SDLK_a)) {
+			a->set(HERO_RUN_LEFT);
+		}
+		else {
+			if (curr == HERO_IDLE) {
+				a->set(HERO_RUN);
+			}
+			else {
+				a->set(HERO_RUN_LEFT);
+			}
+		}
+		v->moveDown();
+	});
 
 	auto runRight = std::bind([a, v]() {
 		IDtype curr = a->getCurrentAnimationID();
@@ -191,23 +242,50 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 		v->moveLeft();
 		a->set(HERO_RUN_LEFT);
 	});
-	auto idleRight = std::bind([a]() {
+	auto idleRight = std::bind([a, ki, v]() {
 		IDtype curr = a->getCurrentAnimationID();
 		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
 			return;
 		}
+		v->setX(0.f);
+		if (!ki->isKeyActive(SDLK_a) || !ki->isKeyActive(SDLK_w) || !ki->isKeyActive(SDLK_s) || !ki->isKeyActive(SDLK_d)) {
+			return;
+		}
+
 		a->set(HERO_IDLE);
 	});
-	auto idleLeft = std::bind([a]() {
+	auto idleLeft = std::bind([a, ki, v]() {
 		IDtype curr = a->getCurrentAnimationID();
 		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
 			return;
 		}
+		v->setX(0.f);
+		if (!ki->isKeyActive(SDLK_a) || !ki->isKeyActive(SDLK_w) || !ki->isKeyActive(SDLK_s) || !ki->isKeyActive(SDLK_d)) {
+			return;
+		}
+
 		a->set(HERO_IDLE_LEFT);
 	});
 
+	auto idleVertical = std::bind([a, ki, v]() {
+		IDtype curr = a->getCurrentAnimationID();
+		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
+			return;
+		}
+		v->setY(0.f);
+		if (!ki->isKeyActive(SDLK_a) || !ki->isKeyActive(SDLK_w) || !ki->isKeyActive(SDLK_s) || !ki->isKeyActive(SDLK_d)) {
+			return;
+		}
+
+		a->set(curr==HERO_RUN ? HERO_IDLE : HERO_IDLE_LEFT);
+	});
+
+	kc->bindOnKeyActive(SDLK_w, runUp);
+	kc->bindOnKeyActive(SDLK_s, runDown);
 	kc->bindOnKeyActive(SDLK_a, runLeft);
 	kc->bindOnKeyActive(SDLK_d, runRight);
+	kc->bindOnKeyReleased(SDLK_w, idleVertical);
+	kc->bindOnKeyReleased(SDLK_s, idleVertical);
 	kc->bindOnKeyReleased(SDLK_a, idleLeft);
 	kc->bindOnKeyReleased(SDLK_d, idleRight);
 	std::clog << "Returning from Hero::setKeyBindings();" << std::endl;

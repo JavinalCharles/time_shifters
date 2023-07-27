@@ -3,6 +3,7 @@
 #include "TS/Entities/Hero.hpp"
 
 #include <BA/Entities/SharedContext.hpp>
+#include <BA/Generator/TileMapGenerator.hpp>
 #include <BA/Scenes/Scene.hpp>
 #include <BA/Systems/AnimationSystem.hpp>
 #include <BA/Systems/CameraSystem.hpp>
@@ -30,6 +31,7 @@ public:
 
 	virtual void draw(ba::Window& window);
 private:
+	void generateMap();
 	void createHero();
 
 private:

@@ -36,6 +36,8 @@ void DemoLevel::onDestroy() {
 
 
 void DemoLevel::onActivate() {
+
+	this->generateMap();
 	this->createHero();
 }
 
@@ -54,6 +56,18 @@ void DemoLevel::postUpdate(float deltaTime) {
 
 void DemoLevel::draw(ba::Window& window) {
 	m_entityManager.draw(window);
+}
+
+void DemoLevel::generateMap() {
+	const ba::Vector2f SCALE{0.125f, 0.125f};
+	path p = m_CONTEXT.resources->getBaseDirectory() / path("Textures") / path("DemoLevel_mossy.tmx");
+
+	std::clog << "Generating Map Entities." << std::endl;
+	std::vector<std::shared_ptr<Entity>> entities = ba::generator::parseMap(p.string(), SCALE, &m_CONTEXT);
+	std::clog << "Generated total " << entities.size() << " entities." << std::endl;
+
+	std::clog << "Adding new entities to the game." << std::endl;
+	m_CONTEXT.entities->add(entities);
 }
 
 
