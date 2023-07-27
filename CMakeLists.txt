@@ -20,14 +20,17 @@ set(SDL_LIBS
 	SDL2_ttf
 )
 
+option(COMPILE_FOR_WIN, "An option to allow for compilation for windows machine" OFF)
+
 add_library(compiler_flags INTERFACE)
 target_compile_features(compiler_flags INTERFACE cxx_std_20)
+
 
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 
 target_compile_options(compiler_flags INTERFACE
-  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
+  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-O2>>"
   "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 
@@ -45,10 +48,6 @@ target_link_libraries(time_shifters BA ${SDL_LIBS} compiler_flags)
 #INSTALLATION
 install(
 	DIRECTORY ${PROJECT_SOURCE_DIR}/dirs DESTINATION share
-)
-install(
-	DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-	DESTINATION include
 )
 install(
 	TARGETS time_shifters

@@ -120,6 +120,7 @@ Hero::Hero(SharedContext* context) :
 	this->setKeyBindings(kc);
 
 	this->setPosition({128.f, 128.f});
+	this->setScale({2.f, 2.f});
 
 	velocity->setMax({256.f, 256.f});
 
