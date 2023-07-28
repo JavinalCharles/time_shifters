@@ -31,6 +31,8 @@ public:
 
 	virtual void draw(ba::Window& window);
 private:
+	void updateBackground(ba::Window& window);
+	void generateBackground();
 	void generateMap();
 	void createHero();
 
@@ -39,6 +41,7 @@ private:
 	ba::InputManager 	m_inputManager;
 	ba::MusicPlayer 	m_musicPlayer;
 
+	std::vector<std::shared_ptr<Entity>> m_rollingBackgrounds;
 }; // class DemoLevel
 
 } // namespace TS

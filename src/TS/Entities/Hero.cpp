@@ -123,7 +123,7 @@ Hero::Hero(SharedContext* context) :
 	sprite->setSortOrder(200);
 
 
-	this->setPosition({128.f, 128.f});
+	this->setPosition({256.f, 256.f});
 	this->setScale({2.0f, 2.0f});
 
 	velocity->setMax({256.f, 256.f});
@@ -178,7 +178,7 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 	std::clog << "Hero::setKeyBindings();" << std::endl;
 	auto a = this->getComponent<Animation>();
 	auto v = this->getComponent<Velocity>();
-	ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
+	// ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
 	ba::KeyboardInput* ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>().get();
 
 
