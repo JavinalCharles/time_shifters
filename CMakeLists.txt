@@ -8,6 +8,7 @@ project(
 )
 
 set(SOURCES
+	src/TS/Components/ModifiedBoxCollider.cpp
 	src/TS/Entities/Hero.cpp
 	src/TS/Scenes/DemoLevel.cpp
 	src/TS/main.cpp

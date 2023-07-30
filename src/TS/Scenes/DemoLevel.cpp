@@ -28,6 +28,12 @@ void DemoLevel::onCreate() {
 	m_entityManager.includeSystem<ba::KeyboardControlSystem>();
 	m_entityManager.includeSystem<ba::MouseControlSystem>();
 	m_entityManager.includeSystem<ba::MovementSystem>();
+
+	auto cs = m_entityManager.getSystem<ba::CollisionSystem>();
+	cs->addCollisionLayer(1u);
+	cs->addCollisionLayer(8u);
+	cs->setCollision(1u, 8u); // Tile Collision
+	cs->setCollision(8u, 1u); // Player Collision
 }
 
 void DemoLevel::onDestroy() {
@@ -126,11 +132,8 @@ void DemoLevel::generateMap() {
 	const ba::Vector2f SCALE{2.f, 2.f};
 	path p = m_CONTEXT.resources->getBaseDirectory() / path("Textures") / path("oak_forest.tmx");
 
-	std::clog << "Generating Map Entities." << std::endl;
 	std::vector<std::shared_ptr<Entity>> entities = ba::generator::parseMap(p.string(), SCALE, &m_CONTEXT);
-	std::clog << "Generated total " << entities.size() << " entities." << std::endl;
 
-	std::clog << "Adding new entities to the game." << std::endl;
 	m_CONTEXT.entities->add(entities);
 }
 

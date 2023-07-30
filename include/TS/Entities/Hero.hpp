@@ -15,6 +15,8 @@
 
 #include <SDL2/SDL_keycode.h>
 
+#include "TS/Components/ModifiedBoxCollider.hpp"
+
 using ba::Entity;
 using ba::IDtype;
 using ba::SharedContext;

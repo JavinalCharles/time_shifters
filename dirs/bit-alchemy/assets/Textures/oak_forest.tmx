@@ -221,7 +221,7 @@
 </chunk>
   </data>
  </layer>
- <layer id="1" name="Platforms[COLLISION]" width="200" height="50" visible="0">
+ <layer id="1" name="Platforms[COLLISION]" width="200" height="50">
   <data encoding="csv">
    <chunk x="0" y="0" width="16" height="16">
 25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

@@ -97,18 +97,18 @@ Hero::Hero(SharedContext* context) :
 	
 	auto animation = this->addComponent<Animation>();
 	auto camera = this->addComponent<Camera>();
-	auto collider = this->addComponent<BoxCollider>();
+	auto collider = this->addComponent<ModifiedBoxCollider>();
 	auto kc = this->addComponent<KeyboardControl>();
 	auto mc = this->addComponent<MouseControl>();
 	auto sprite = this->addComponent<Sprite>();
 	auto velocity = this->addComponent<Velocity>();
 	// 
-	const Vector2f COLLISION_AREA{25.F, 45.F};
-	this->setOrigin(Vector2f{35.f, 10.f} + Vector2f(COLLISION_AREA * 0.5f));
+	const Vector2f COLLISION_AREA{23.F, 43.F};
 
 	// COLLIDER
 	collider->setSize(COLLISION_AREA);
-	collider->setLayer(8);
+	collider->setLayer(8u);
+	collider->setOrigin(COLLISION_AREA * 0.5f);
 	
 	// CAMERA
 	camera->setView(CONTEXT->window->getView());
@@ -122,24 +122,26 @@ Hero::Hero(SharedContext* context) :
 	sprite->setDrawLayer(32);
 	sprite->setSortOrder(200);
 
+	animation->set(HERO_IDLE);
 
 	this->setPosition({256.f, 256.f});
 	this->setScale({2.0f, 2.0f});
+	this->setOrigin({50.f, 27.5});
 
 	velocity->setMax({256.f, 256.f});
 
 } // Hero::Hero()
 
 void Hero::loadResources() {
-	std::clog << "Hero::loadResources()" << std::endl;
+	// std::clog << "Hero::loadResources()" << std::endl;
 	if (s_resourcesLoaded == true) {
-		std::clog << "Resources already reloaded. Returning." << std::endl;
+		// std::clog << "Resources already reloaded. Returning." << std::endl;
 		return;
 	}
 	for (auto& [id, v] : s_resourcesToLoad) {
 		for (auto& str : v) {
 			if (!s_R.contains(id)) {
-				std::clog << "Assigning animation: " << id << std::endl;
+				// std::clog << "Assigning animation: " << id << std::endl;
 				s_R.insert_or_assign(id, std::vector<IDtype>{});
 			}
 			s_R.at(id).push_back(this->CONTEXT->resources->loadTexture(str));
@@ -152,11 +154,10 @@ void Hero::loadResources() {
 	s_R.insert_or_assign(HERO_ATTACK_3_LEFT, s_R.at(HERO_ATTACK_3));
 
 	s_resourcesLoaded = true;
-	std::clog << "Returning from Hero::loadResources();" << std::endl;
+	// std::clog << "Returning from Hero::loadResources();" << std::endl;
 }
 
 void Hero::setMouseButtonBindings(std::shared_ptr<MouseControl>& mc) {
-	std::clog << "Hero::setMouseButtonBindings():" << std::endl;
 	auto a = this->getComponent<Animation>();
 	auto ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>();
 
@@ -170,12 +171,10 @@ void Hero::setMouseButtonBindings(std::shared_ptr<MouseControl>& mc) {
 		a->set(ATTACK_RIGHT ? HERO_ATTACK_1 : HERO_ATTACK_1_LEFT);
 	});
 
-	mc->bindOnMouseButtonPressed(ba::MouseButton::LEFT, startAttack);
-	std::clog << "Returning from Hero::setMouseButtonBindings();" << std::endl;
+	mc->bindOnMouseButtonPressed(ba::MouseButton::LEFT, startAttack);;
 }
 
 void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
-	std::clog << "Hero::setKeyBindings();" << std::endl;
 	auto a = this->getComponent<Animation>();
 	auto v = this->getComponent<Velocity>();
 	// ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
@@ -288,11 +287,9 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 	kc->bindOnKeyReleased(SDLK_s, idleVertical);
 	kc->bindOnKeyReleased(SDLK_a, idleLeft);
 	kc->bindOnKeyReleased(SDLK_d, idleRight);
-	std::clog << "Returning from Hero::setKeyBindings();" << std::endl;
 }
 
 void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
-	std::clog << "Hero::populateAnimation();" << std::endl;
 	const IntRect RECT{
 		0, 0, 100, 55
 	};
@@ -349,8 +346,6 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 	a->addFrameAction(HERO_ATTACK_3, 7, end3rdAttack);
 	a->addFrameAction(HERO_ATTACK_3_LEFT, 7, end3rdAttack);
 	a->set(HERO_IDLE);
-
-	std::clog << "Returning from Hero::populateAnimation();" << std::endl;
 }
 
 
