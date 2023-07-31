@@ -24,68 +24,138 @@ enum HeroAnimationss : IDtype {
 	HERO_IDLE_LEFT,
 	HERO_RUN,
 	HERO_RUN_LEFT,
+	HERO_FALL,
+	HERO_FALL_LEFT,
 	HERO_ATTACK_1,
 	HERO_ATTACK_1_LEFT,
 	HERO_ATTACK_2,
 	HERO_ATTACK_2_LEFT,
 	HERO_ATTACK_3,
-	HERO_ATTACK_3_LEFT
+	HERO_ATTACK_3_LEFT,
+	HERO_BLOCK_IDLE,
+	HERO_BLOCK_IDLE_LEFT,
+	HERO_BLOCK_EFFECT,
+	HERO_BLOCK_EFFECT_LEFT,
+	HERO_JUMP,
+	HERO_JUMP_LEFT
 };
 
+const float Y_GRAVITY = 256.f;
+
 bool Hero::s_resourcesLoaded = false;
-std::unordered_map<IDtype, std::vector<IDtype>> Hero::s_R{};
-const std::unordered_map<IDtype, std::vector<std::string>> Hero::s_resourcesToLoad = {
-	{HERO_IDLE, {
-		"HeroKnight/Idle/HeroKnight_Idle_0.png",
-		"HeroKnight/Idle/HeroKnight_Idle_1.png",
-		"HeroKnight/Idle/HeroKnight_Idle_2.png",
-		"HeroKnight/Idle/HeroKnight_Idle_3.png",
-		"HeroKnight/Idle/HeroKnight_Idle_4.png",
-		"HeroKnight/Idle/HeroKnight_Idle_5.png",
-		"HeroKnight/Idle/HeroKnight_Idle_6.png",
-		"HeroKnight/Idle/HeroKnight_Idle_7.png"
+std::unordered_map<IDtype, std::pair<float,std::vector<IDtype>>> Hero::s_R{};
+const std::unordered_map<IDtype, std::pair<float,std::vector<std::string>>> Hero::s_resourcesToLoad{
+	{HERO_IDLE, 
+		{1.f, 
+			{
+				"HeroKnight/Idle/HeroKnight_Idle_0.png",
+				"HeroKnight/Idle/HeroKnight_Idle_1.png",
+				"HeroKnight/Idle/HeroKnight_Idle_2.png",
+				"HeroKnight/Idle/HeroKnight_Idle_3.png",
+				"HeroKnight/Idle/HeroKnight_Idle_4.png",
+				"HeroKnight/Idle/HeroKnight_Idle_5.png",
+				"HeroKnight/Idle/HeroKnight_Idle_6.png",
+				"HeroKnight/Idle/HeroKnight_Idle_7.png"
+			}
 		}
 	},
-	{HERO_RUN, {
-		"HeroKnight/Run/HeroKnight_Run_0.png",
-		"HeroKnight/Run/HeroKnight_Run_1.png",
-		"HeroKnight/Run/HeroKnight_Run_2.png",
-		"HeroKnight/Run/HeroKnight_Run_3.png",
-		"HeroKnight/Run/HeroKnight_Run_4.png",
-		"HeroKnight/Run/HeroKnight_Run_5.png",
-		"HeroKnight/Run/HeroKnight_Run_6.png",
-		"HeroKnight/Run/HeroKnight_Run_7.png",
-		"HeroKnight/Run/HeroKnight_Run_8.png",
-		"HeroKnight/Run/HeroKnight_Run_9.png",
+	{HERO_RUN, 
+		{1.f,
+			{
+				"HeroKnight/Run/HeroKnight_Run_0.png",
+				"HeroKnight/Run/HeroKnight_Run_1.png",
+				"HeroKnight/Run/HeroKnight_Run_2.png",
+				"HeroKnight/Run/HeroKnight_Run_3.png",
+				"HeroKnight/Run/HeroKnight_Run_4.png",
+				"HeroKnight/Run/HeroKnight_Run_5.png",
+				"HeroKnight/Run/HeroKnight_Run_6.png",
+				"HeroKnight/Run/HeroKnight_Run_7.png",
+				"HeroKnight/Run/HeroKnight_Run_8.png",
+				"HeroKnight/Run/HeroKnight_Run_9.png",
+			}
 		}
 	},
-	{HERO_ATTACK_1, {
-		"HeroKnight/Attack1/HeroKnight_Attack1_0.png",
-		"HeroKnight/Attack1/HeroKnight_Attack1_1.png",
-		"HeroKnight/Attack1/HeroKnight_Attack1_2.png",
-		"HeroKnight/Attack1/HeroKnight_Attack1_3.png",
-		"HeroKnight/Attack1/HeroKnight_Attack1_4.png",
-		"HeroKnight/Attack1/HeroKnight_Attack1_5.png",
+	{HERO_ATTACK_1, 
+		{ 0.5f,
+			{
+				"HeroKnight/Attack1/HeroKnight_Attack1_0.png",
+				"HeroKnight/Attack1/HeroKnight_Attack1_1.png",
+				"HeroKnight/Attack1/HeroKnight_Attack1_2.png",
+				"HeroKnight/Attack1/HeroKnight_Attack1_3.png",
+				"HeroKnight/Attack1/HeroKnight_Attack1_4.png",
+				"HeroKnight/Attack1/HeroKnight_Attack1_5.png",
+			}
 		}
 	},
-	{HERO_ATTACK_2, {
-		"HeroKnight/Attack2/HeroKnight_Attack2_0.png",
-		"HeroKnight/Attack2/HeroKnight_Attack2_1.png",
-		"HeroKnight/Attack2/HeroKnight_Attack2_2.png",
-		"HeroKnight/Attack2/HeroKnight_Attack2_3.png",
-		"HeroKnight/Attack2/HeroKnight_Attack2_4.png",
-		"HeroKnight/Attack2/HeroKnight_Attack2_5.png"
+	{HERO_ATTACK_2, 
+		{ 0.5f,
+			{
+				"HeroKnight/Attack2/HeroKnight_Attack2_0.png",
+				"HeroKnight/Attack2/HeroKnight_Attack2_1.png",
+				"HeroKnight/Attack2/HeroKnight_Attack2_2.png",
+				"HeroKnight/Attack2/HeroKnight_Attack2_3.png",
+				"HeroKnight/Attack2/HeroKnight_Attack2_4.png",
+				"HeroKnight/Attack2/HeroKnight_Attack2_5.png"
+			}
 		}
 	},
-	{HERO_ATTACK_3, {
-		"HeroKnight/Attack3/HeroKnight_Attack3_0.png",
-		"HeroKnight/Attack3/HeroKnight_Attack3_1.png",
-		"HeroKnight/Attack3/HeroKnight_Attack3_2.png",
-		"HeroKnight/Attack3/HeroKnight_Attack3_3.png",
-		"HeroKnight/Attack3/HeroKnight_Attack3_4.png",
-		"HeroKnight/Attack3/HeroKnight_Attack3_5.png",
-		"HeroKnight/Attack3/HeroKnight_Attack3_6.png",
-		"HeroKnight/Attack3/HeroKnight_Attack3_7.png"
+	{HERO_ATTACK_3,
+		{ 0.5f,
+			{
+				"HeroKnight/Attack3/HeroKnight_Attack3_0.png",
+				"HeroKnight/Attack3/HeroKnight_Attack3_1.png",
+				"HeroKnight/Attack3/HeroKnight_Attack3_2.png",
+				"HeroKnight/Attack3/HeroKnight_Attack3_3.png",
+				"HeroKnight/Attack3/HeroKnight_Attack3_4.png",
+				"HeroKnight/Attack3/HeroKnight_Attack3_5.png",
+				"HeroKnight/Attack3/HeroKnight_Attack3_6.png",
+				"HeroKnight/Attack3/HeroKnight_Attack3_7.png"
+			}
+		}
+	},
+	{HERO_BLOCK_IDLE,
+		{ 1.f,
+			{
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_0.png",
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_1.png",
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_2.png",
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_3.png",
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_4.png",
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_5.png",
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_6.png",
+				"HeroKnight/BlockIdle/HeroKnight_Block Idle_7.png",
+			}
+		}
+	},
+	{HERO_BLOCK_EFFECT,
+		{0.4f,
+			{
+				"HeroKnight/Block/HeroKnight_Block_0.png",
+				"HeroKnight/Block/HeroKnight_Block_1.png",
+				"HeroKnight/Block/HeroKnight_Block_2.png",
+				"HeroKnight/Block/HeroKnight_Block_3.png",
+				"HeroKnight/Block/HeroKnight_Block_4.png",
+			}
+		}
+	},
+	{HERO_FALL,
+		{0.2f,
+			{
+				"HeroKnight/Fall/HeroKnight_Fall_0.png",
+				"HeroKnight/Fall/HeroKnight_Fall_1.png",
+				"HeroKnight/Fall/HeroKnight_Fall_2.png",
+				"HeroKnight/Fall/HeroKnight_Fall_3.png",
+			}
+		}
+	},
+	{HERO_JUMP,
+		{0.2f,
+			{
+				"HeroKnight/Jump/HeroKnight_Jump_0.png",
+				"HeroKnight/Jump/HeroKnight_Jump_1.png",
+				"HeroKnight/Jump/HeroKnight_Jump_2.png",
+			}
+			
 		}
 	}
 };
@@ -102,6 +172,7 @@ Hero::Hero(SharedContext* context) :
 	auto mc = this->addComponent<MouseControl>();
 	auto sprite = this->addComponent<Sprite>();
 	auto velocity = this->addComponent<Velocity>();
+	auto updateable = this->addComponent<Updateable>();
 	// 
 	const Vector2f COLLISION_AREA{23.F, 43.F};
 
@@ -129,8 +200,29 @@ Hero::Hero(SharedContext* context) :
 	this->setOrigin({50.f, 27.5});
 
 	velocity->setMax({256.f, 256.f});
+	velocity->setY(Y_GRAVITY);
 
+	Update u = std::bind(&Hero::updatePreviousPosition, this, std::placeholders::_1);
+	updateable->addUpdate(u);
 } // Hero::Hero()
+
+void Hero::updatePreviousPosition(float) {
+	m_previousPosition = m_thisPosition;
+	m_thisPosition = this->getPosition();
+
+	if ((m_thisPosition.y - m_previousPosition.y) > 4.f) {
+		auto animation = this->getComponent<ba::Animation>();
+		const IDtype CURR = animation->getCurrentAnimationID();
+
+		if (CURR % 2 == 0) {
+			animation->set(HERO_FALL_LEFT);
+		}
+		else {
+			animation->set(HERO_FALL);
+		}
+	}
+}
+
 
 void Hero::loadResources() {
 	// std::clog << "Hero::loadResources()" << std::endl;
@@ -138,13 +230,13 @@ void Hero::loadResources() {
 		// std::clog << "Resources already reloaded. Returning." << std::endl;
 		return;
 	}
-	for (auto& [id, v] : s_resourcesToLoad) {
-		for (auto& str : v) {
+	for (auto& [id, pair] : s_resourcesToLoad) {
+		for (auto& str : pair.second) {
 			if (!s_R.contains(id)) {
 				// std::clog << "Assigning animation: " << id << std::endl;
-				s_R.insert_or_assign(id, std::vector<IDtype>{});
+				s_R.insert_or_assign(id, std::make_pair(pair.first, std::vector<IDtype>{}));
 			}
-			s_R.at(id).push_back(this->CONTEXT->resources->loadTexture(str));
+			s_R.at(id).second.push_back(this->CONTEXT->resources->loadTexture(str));
 		}
 	}
 	s_R.insert_or_assign(HERO_IDLE_LEFT, s_R.at(HERO_IDLE));
@@ -152,6 +244,10 @@ void Hero::loadResources() {
 	s_R.insert_or_assign(HERO_ATTACK_1_LEFT, s_R.at(HERO_ATTACK_1));
 	s_R.insert_or_assign(HERO_ATTACK_2_LEFT, s_R.at(HERO_ATTACK_2));
 	s_R.insert_or_assign(HERO_ATTACK_3_LEFT, s_R.at(HERO_ATTACK_3));
+	s_R.insert_or_assign(HERO_BLOCK_IDLE_LEFT, s_R.at(HERO_BLOCK_IDLE));
+	s_R.insert_or_assign(HERO_BLOCK_EFFECT_LEFT, s_R.at(HERO_BLOCK_EFFECT));
+	s_R.insert_or_assign(HERO_FALL_LEFT, s_R.at(HERO_FALL));
+	s_R.insert_or_assign(HERO_JUMP_LEFT, s_R.at(HERO_JUMP));
 
 	s_resourcesLoaded = true;
 	// std::clog << "Returning from Hero::loadResources();" << std::endl;
@@ -160,18 +256,60 @@ void Hero::loadResources() {
 void Hero::setMouseButtonBindings(std::shared_ptr<MouseControl>& mc) {
 	auto a = this->getComponent<Animation>();
 	auto ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>();
+	auto mi = this->CONTEXT->inputs->getInput<ba::MouseInput>();
+	auto v = this->getComponent<Velocity>();
 
-	auto startAttack = std::bind([a, ki]() {
+	auto startAttack = std::bind([a, ki, v]() {
 		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
+		if(HERO_ATTACK_1 <= curr && curr <= HERO_JUMP_LEFT) {
 			return;
 		}
 		const bool ATTACK_RIGHT = ki->isKeyActive(SDLK_d) ? true : (ki->isKeyActive(SDLK_a) ? false : ((curr == HERO_IDLE || curr == HERO_RUN) ? true : false));
 
 		a->set(ATTACK_RIGHT ? HERO_ATTACK_1 : HERO_ATTACK_1_LEFT);
+		v->setX(0.f);
 	});
 
-	mc->bindOnMouseButtonPressed(ba::MouseButton::LEFT, startAttack);;
+	auto startBlock = std::bind([a, v]() {
+		IDtype curr = a->getCurrentAnimationID();
+		if (HERO_ATTACK_1 <= curr && curr <= HERO_JUMP_LEFT) {
+			return;
+		}
+
+		switch(curr) {
+			case HERO_RUN:
+			case HERO_IDLE:
+				a->set(HERO_BLOCK_IDLE);
+				break;
+			default:
+				a->set(HERO_BLOCK_IDLE_LEFT);
+		}
+		v->setX(0.f);
+	});
+
+	auto releaseBlock = std::bind([a, mi, v]() {
+		IDtype curr = a->getCurrentAnimationID();
+		if (HERO_ATTACK_1 <= curr && curr <= HERO_ATTACK_3_LEFT) {
+			return;
+		}
+
+		if (mi->isButtonActive(ba::MouseButton::LEFT) || mi->isButtonActive(ba::MouseButton::RIGHT)) {
+			return;
+		}
+
+		switch(curr) {
+			case HERO_BLOCK_IDLE:
+				a->set(HERO_IDLE);
+				break;
+			default:
+				a->set(HERO_IDLE_LEFT);
+		}
+
+	});
+
+	mc->bindOnMouseButtonPressed(ba::MouseButton::LEFT, startAttack);
+	mc->bindOnMouseButtonActive(ba::MouseButton::RIGHT, startBlock);
+	mc->bindOnMouseButtonReleased(ba::MouseButton::RIGHT, releaseBlock);
 }
 
 void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
@@ -181,112 +319,76 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 	ba::KeyboardInput* ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>().get();
 
 
-	auto runUp = std::bind([a, ki, v]() {
+	auto run = std::bind([a, ki, v, this](){
 		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
+		if (HERO_ATTACK_1 <= curr && curr <= HERO_JUMP_LEFT) {
 			return;
 		}
-		if (ki->isKeyActive(SDLK_d)) {
-			a->set(HERO_RUN);
-		}
-		else if (ki->isKeyActive(SDLK_a)) {
-			a->set(HERO_RUN_LEFT);
-		}
-		else {
-			if (curr == HERO_IDLE) {
-				a->set(HERO_RUN);
+
+		if (ki->isKeyActive(SDLK_a)) {
+			switch (curr) {
+				case HERO_FALL:
+				case HERO_FALL_LEFT:
+					a->set(HERO_FALL_LEFT);
+					break;
+				default:
+					a->set(HERO_RUN_LEFT);
 			}
-			else {
-				a->set(HERO_RUN_LEFT);
-			}
+			v->moveLeft();
 		}
-		v->moveUp();
+		else if (ki->isKeyActive(SDLK_d)) {
+			switch (curr) {
+				case HERO_FALL:
+				case HERO_FALL_LEFT:
+					a->set(HERO_FALL);
+					break;
+				default:
+					a->set(HERO_RUN);
+			}
+			v->moveRight();
+		}
 	});
 
-	auto runDown = std::bind([a, ki, v]() {
-		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
-			return;
-		}
-		if (ki->isKeyActive(SDLK_d)) {
-			a->set(HERO_RUN);
-		}
-		else if (ki->isKeyActive(SDLK_a)) {
-			a->set(HERO_RUN_LEFT);
-		}
-		else {
-			if (curr == HERO_IDLE) {
-				a->set(HERO_RUN);
-			}
-			else {
-				a->set(HERO_RUN_LEFT);
-			}
-		}
-		v->moveDown();
-	});
 
-	auto runRight = std::bind([a, v]() {
+	auto idle = std::bind([a, ki, v]() {
 		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
+		if (HERO_ATTACK_1 <= curr && curr <= HERO_JUMP_LEFT) {
 			return;
 		}
-		v->moveRight();
-		a->set(HERO_RUN);
-	});
-	auto runLeft = std::bind([a, v]() {
-		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
+
+		if (ki->isKeyActive(SDLK_a) || ki->isKeyActive(SDLK_d)) {
 			return;
-		}
-		v->moveLeft();
-		a->set(HERO_RUN_LEFT);
-	});
-	auto idleRight = std::bind([a, ki, v]() {
-		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
-			return;
+			
 		}
 		v->setX(0.f);
-		if (!ki->isKeyActive(SDLK_a) || !ki->isKeyActive(SDLK_w) || !ki->isKeyActive(SDLK_s) || !ki->isKeyActive(SDLK_d)) {
-			return;
+
+		switch(curr) {
+			case HERO_RUN:
+				a->set(HERO_IDLE);
+				break;
+			case HERO_RUN_LEFT:
+				a->set(HERO_IDLE_LEFT);
+				break;
+			case HERO_FALL:
+				a->set(HERO_FALL);
+				break;
+			case HERO_FALL_LEFT:
+				a->set(HERO_FALL_LEFT);
+				break;
+			default:
+				a->set(HERO_IDLE);
 		}
 
-		a->set(HERO_IDLE);
-	});
-	auto idleLeft = std::bind([a, ki, v]() {
-		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
-			return;
-		}
-		v->setX(0.f);
-		if (!ki->isKeyActive(SDLK_a) || !ki->isKeyActive(SDLK_w) || !ki->isKeyActive(SDLK_s) || !ki->isKeyActive(SDLK_d)) {
-			return;
-		}
-
-		a->set(HERO_IDLE_LEFT);
-	});
-
-	auto idleVertical = std::bind([a, ki, v]() {
-		IDtype curr = a->getCurrentAnimationID();
-		if(curr == HERO_ATTACK_1 || curr == HERO_ATTACK_1_LEFT || curr == HERO_ATTACK_2 || curr == HERO_ATTACK_2_LEFT || curr == HERO_ATTACK_3 || curr == HERO_ATTACK_3_LEFT) {
-			return;
-		}
-		v->setY(0.f);
-		if (!ki->isKeyActive(SDLK_a) || !ki->isKeyActive(SDLK_w) || !ki->isKeyActive(SDLK_s) || !ki->isKeyActive(SDLK_d)) {
-			return;
-		}
-
-		a->set(curr==HERO_RUN ? HERO_IDLE : HERO_IDLE_LEFT);
 	});
 
-	kc->bindOnKeyActive(SDLK_w, runUp);
-	kc->bindOnKeyActive(SDLK_s, runDown);
-	kc->bindOnKeyActive(SDLK_a, runLeft);
-	kc->bindOnKeyActive(SDLK_d, runRight);
-	kc->bindOnKeyReleased(SDLK_w, idleVertical);
-	kc->bindOnKeyReleased(SDLK_s, idleVertical);
-	kc->bindOnKeyReleased(SDLK_a, idleLeft);
-	kc->bindOnKeyReleased(SDLK_d, idleRight);
+	kc->bindOnKeyActive(SDLK_w, run);
+	kc->bindOnKeyActive(SDLK_s, run);
+	kc->bindOnKeyActive(SDLK_a, run);
+	kc->bindOnKeyActive(SDLK_d, run);
+	kc->bindOnKeyReleased(SDLK_w, idle);
+	kc->bindOnKeyReleased(SDLK_s, idle);
+	kc->bindOnKeyReleased(SDLK_a, idle);
+	kc->bindOnKeyReleased(SDLK_d, idle);
 }
 
 void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
@@ -297,10 +399,10 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		100, 0, -100, 55
 	};
 	
-	for (auto& [animationID, resourcesIDs] : s_R) {
-		const float ANIMATION_TIME = 0.8f / resourcesIDs.size();
+	for (auto& [animationID, pair] : s_R) {
+		const float ANIMATION_TIME = pair.first / pair.second.size();
 		Sequence s;
-		for (const auto& RES_ID : resourcesIDs) {
+		for (const auto& RES_ID : pair.second) {
 			s.frames.push_back(Frame{
 				RES_ID,
 				animationID%2==0 ? LEFT_RECT : RECT,
@@ -339,12 +441,43 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		a->set(NEXT_IS_RIGHT ? HERO_IDLE : HERO_IDLE_LEFT);
 	});
 
+	auto fromEffectToIdleBlock = std::bind([mi, a](){
+		IDtype curr = a->getCurrentAnimationID();
+		if (mi->isButtonActive(ba::MouseButton::RIGHT)) {
+			a->set(curr == HERO_BLOCK_EFFECT ? HERO_BLOCK_IDLE : HERO_BLOCK_IDLE_LEFT);
+		}
+		else {
+			a->set(curr == HERO_BLOCK_EFFECT ? HERO_IDLE : HERO_IDLE_LEFT);
+		}
+	});
+
+	auto fromFallToIdle = std::bind([mi, a, this]() {
+		if (this->m_previousPosition.y > this->m_thisPosition.y) {
+			return;
+		}
+		IDtype curr = a->getCurrentAnimationID();
+		a->set(curr == HERO_FALL ? HERO_IDLE : HERO_IDLE_LEFT);
+	});
+
 	a->addFrameAction(HERO_ATTACK_1, 5, to2ndAttack);
 	a->addFrameAction(HERO_ATTACK_1_LEFT, 5, to2ndAttack);
 	a->addFrameAction(HERO_ATTACK_2, 5, to3rdAttack);
 	a->addFrameAction(HERO_ATTACK_2_LEFT, 5, to3rdAttack);
 	a->addFrameAction(HERO_ATTACK_3, 7, end3rdAttack);
 	a->addFrameAction(HERO_ATTACK_3_LEFT, 7, end3rdAttack);
+	a->addFrameAction(HERO_BLOCK_EFFECT, 4, fromEffectToIdleBlock);
+	a->addFrameAction(HERO_BLOCK_EFFECT_LEFT, 4, fromEffectToIdleBlock);
+
+	a->addFrameAction(HERO_FALL, 0, fromFallToIdle);
+	a->addFrameAction(HERO_FALL, 1, fromFallToIdle);
+	a->addFrameAction(HERO_FALL, 2, fromFallToIdle);
+	a->addFrameAction(HERO_FALL, 3, fromFallToIdle);
+	a->addFrameAction(HERO_FALL_LEFT, 0, fromFallToIdle);
+	a->addFrameAction(HERO_FALL_LEFT, 1, fromFallToIdle);
+	a->addFrameAction(HERO_FALL_LEFT, 2, fromFallToIdle);
+	a->addFrameAction(HERO_FALL_LEFT, 3, fromFallToIdle);
+
+
 	a->set(HERO_IDLE);
 }
 

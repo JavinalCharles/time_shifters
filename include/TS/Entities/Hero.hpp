@@ -11,11 +11,13 @@
 #include <BA/Components/MouseControl.hpp>
 #include <BA/Components/Sprite.hpp>
 #include <BA/Components/Velocity.hpp>
+#include <BA/Utilities/Vector2.hpp>
 #include <BA/Types.hpp>
 
 #include <SDL2/SDL_keycode.h>
 
 #include "TS/Components/ModifiedBoxCollider.hpp"
+#include "TS/Components/Updateable.hpp"
 
 using ba::Entity;
 using ba::IDtype;
@@ -27,6 +29,10 @@ class Hero : public Entity {
 public:
 	Hero(SharedContext* context);
 
+	void updatePreviousPosition(float deltaTime);
+	const ba::Vector2f& getPreviousPosition() const;
+
+
 private:
 	void setMouseButtonBindings(std::shared_ptr<ba::MouseControl>& mc);
 	void setKeyBindings(std::shared_ptr<ba::KeyboardControl>& kc);
@@ -34,9 +40,13 @@ private:
 	void loadResources();
 
 private:
+	ba::Vector2f m_previousPosition;
+	ba::Vector2f m_thisPosition;
+
+private:
 	static bool s_resourcesLoaded;
-	static const std::unordered_map<IDtype,std::vector<std::string>> s_resourcesToLoad;
-	static std::unordered_map<IDtype, std::vector<IDtype>> s_R;
+	static const std::unordered_map<IDtype, std::pair<float, std::vector<std::string>>> s_resourcesToLoad;
+	static std::unordered_map<IDtype, std::pair<float,std::vector<IDtype>>> s_R;
 
 }; // class Hero
 

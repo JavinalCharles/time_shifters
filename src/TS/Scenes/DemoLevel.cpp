@@ -28,6 +28,7 @@ void DemoLevel::onCreate() {
 	m_entityManager.includeSystem<ba::KeyboardControlSystem>();
 	m_entityManager.includeSystem<ba::MouseControlSystem>();
 	m_entityManager.includeSystem<ba::MovementSystem>();
+	m_entityManager.includeSystem<TS::UpdateableSystem>();
 
 	auto cs = m_entityManager.getSystem<ba::CollisionSystem>();
 	cs->addCollisionLayer(1u);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TS/Entities/Hero.hpp"
+#include "TS/Systems/UpdateableSystem.hpp"
 
 #include <BA/Entities/SharedContext.hpp>
 #include <BA/Generator/TileMapGenerator.hpp>
