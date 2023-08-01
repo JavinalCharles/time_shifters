@@ -216,15 +216,22 @@ void Hero::updatePreviousPosition(float deltaTime) {
 	auto animation = this->getComponent<ba::Animation>();
 	const IDtype CURR = animation->getCurrentAnimationID();
 	if (this->m_jumping) {
-		m_jumpedTime += deltaTime;
-		if (m_jumpedTime >= s_MAX_JUMP_TIME || ((m_previousPosition.y - m_thisPosition.y) < 4)) {
-			if (CURR % 2 == 0) {
-				animation->set(HERO_FALL_LEFT);
+		if (CURR == HERO_JUMP || CURR == HERO_JUMP_LEFT)
+		{
+			m_jumpedTime += deltaTime;
+			if (m_jumpedTime >= s_MAX_JUMP_TIME || ((m_previousPosition.y - m_thisPosition.y) < 4)) {
+				animation->set(CURR%2==0? HERO_FALL_LEFT : HERO_FALL);
+				this->getComponent<Velocity>()->setY(Y_GRAVITY);
+				this->m_jumping = false;
 			}
-			else {
-				animation->set(HERO_FALL);
-			}
-			this->getComponent<Velocity>()->setY(Y_GRAVITY);
+		}
+	}
+	else if (CURR == HERO_FALL || CURR == HERO_FALL_LEFT) {
+		if (this->m_thisPosition.y <= this->m_previousPosition.y) {
+			animation->set(CURR % 2 == 0 ? HERO_IDLE_LEFT : HERO_IDLE);
+			this->m_jumping = false;
+			this->m_doubleJumped = false;
+			this->m_jumpedTime = 0.f;
 		}
 	}
 	else if ((m_thisPosition.y - m_previousPosition.y) > 4.f) {
@@ -236,7 +243,6 @@ void Hero::updatePreviousPosition(float deltaTime) {
 		}
 	}
 }
-
 
 void Hero::loadResources() {
 	// std::clog << "Hero::loadResources()" << std::endl;
@@ -343,33 +349,26 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 			return;
 		}
 
-		if (!this->m_jumping) {
-			this->m_jumping = true;
-			this->m_jumpedTime = 0.0f;
-			v->setY(-Y_GRAVITY);
-			switch(curr) {
-				case HERO_IDLE_LEFT:
-				case HERO_RUN_LEFT:
-					a->set(HERO_JUMP_LEFT);
-					break;
-				case HERO_IDLE:
-				case HERO_RUN:
-					a->set(HERO_JUMP);
-			}
+		if (this->m_doubleJumped) {
+			return;
 		}
-		else if (this->m_jumping && !this->m_doubleJumped) {
-			v->setY(-Y_GRAVITY);
-			this->m_jumpedTime = 0.0;
-			this->m_doubleJumped = true;
-			switch(curr) {
-				case HERO_JUMP_LEFT:
-				case HERO_FALL_LEFT:
-					a->set(HERO_JUMP_LEFT);
-					break;
-				case HERO_JUMP:
-				case HERO_FALL:
-					a->set(HERO_JUMP);
-			}
+
+		switch (curr) {
+			case HERO_JUMP:
+			case HERO_JUMP_LEFT:
+			case HERO_FALL:
+			case HERO_FALL_LEFT:
+				this->m_doubleJumped = true;
+				[[fallthrough]];
+			case HERO_IDLE:
+			case HERO_IDLE_LEFT:
+			case HERO_RUN:
+			case HERO_RUN_LEFT:
+				this->m_jumping = true;
+				this->m_jumpedTime = 0.0f;
+				v->setY(-Y_GRAVITY);
+				a->set(curr % 2 == 0 ? HERO_JUMP_LEFT : HERO_JUMP);
+				break;
 		}
 	});
 
@@ -391,7 +390,10 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 					a->set(HERO_FALL_LEFT);
 					v->setX(-NORMAL_SPEED * 1.2f);
 					break;
-				default:
+				case HERO_RUN:
+				case HERO_IDLE:
+				case HERO_RUN_LEFT:
+				case HERO_IDLE_LEFT:
 					a->set(HERO_RUN_LEFT);
 					v->setX(-NORMAL_SPEED);
 			}
@@ -408,7 +410,10 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 					a->set(HERO_FALL);
 					v->setX(NORMAL_SPEED * 1.2f);
 					break;
-				default:
+				case HERO_RUN:
+				case HERO_IDLE:
+				case HERO_RUN_LEFT:
+				case HERO_IDLE_LEFT:
 					a->set(HERO_RUN);
 					v->setX(NORMAL_SPEED);
 			}
@@ -443,8 +448,6 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 	kc->bindOnKeyPressed(SDLK_w, jump);
 	kc->bindOnKeyActive(SDLK_a, run);
 	kc->bindOnKeyActive(SDLK_d, run);
-	kc->bindOnKeyReleased(SDLK_w, idle);
-	kc->bindOnKeyReleased(SDLK_s, idle);
 	kc->bindOnKeyReleased(SDLK_a, idle);
 	kc->bindOnKeyReleased(SDLK_d, idle);
 }
@@ -475,6 +478,7 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 
 	ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
 	ba::KeyboardInput* ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>().get();
+	auto v = this->getComponent<Velocity>();
 
 	auto to2ndAttack = std::bind([a, mi, ki]() {
 		IDtype curr = a->getCurrentAnimationID();
@@ -509,17 +513,30 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		}
 	});
 
-	auto fromFallToIdle = std::bind([mi, a, this]() {
+	auto fromFallToIdle = std::bind([v, a, this]() {
 		if (this->m_previousPosition.y > this->m_thisPosition.y) {
 			return;
 		}
+
 		IDtype curr = a->getCurrentAnimationID();
-		a->set(curr == HERO_FALL ? HERO_IDLE : HERO_IDLE_LEFT);
-		this->m_jumping = false;
-		this->m_doubleJumped = false;
-		this->m_jumpedTime = 0.f;
+
+		a->set(curr % 2 == 0 ? HERO_IDLE_LEFT : HERO_IDLE);
+		v->setY(Y_GRAVITY);
 	});
 
+	auto resetJump = std::bind([a, this]() {
+		if (this->m_jumping || this->m_doubleJumped) {
+			this->m_jumping = false;
+			this->m_doubleJumped = false;
+			this->m_jumpedTime = 0.f;
+		}
+	});
+
+
+	a->addFrameAction(HERO_IDLE, 0, resetJump);
+	a->addFrameAction(HERO_IDLE_LEFT, 0, resetJump);
+	a->addFrameAction(HERO_RUN, 0, resetJump);
+	a->addFrameAction(HERO_RUN_LEFT, 0, resetJump);
 	a->addFrameAction(HERO_ATTACK_1, 5, to2ndAttack);
 	a->addFrameAction(HERO_ATTACK_1_LEFT, 5, to2ndAttack);
 	a->addFrameAction(HERO_ATTACK_2, 5, to3rdAttack);

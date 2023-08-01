@@ -3,7 +3,8 @@
 namespace TS {
 
 DemoLevel::DemoLevel() :
-	ba::Scene::Scene()
+	ba::Scene::Scene(),
+	m_musicPlayer(nullptr)
 {
 	m_CONTEXT.entities = &m_entityManager;
 	m_CONTEXT.inputs = &m_inputManager;
@@ -11,7 +12,8 @@ DemoLevel::DemoLevel() :
 }
 
 DemoLevel::DemoLevel(ba::Window* window, ba::ResourceManager* resources, ba::SceneManager* sceneManager) :
-	ba::Scene::Scene(window, resources, sceneManager)
+	ba::Scene::Scene(window, resources, sceneManager),
+	m_musicPlayer(resources)
 {
 	m_CONTEXT.entities = &m_entityManager;
 	m_CONTEXT.inputs = &m_inputManager;
@@ -38,14 +40,27 @@ void DemoLevel::onCreate() {
 }
 
 void DemoLevel::onDestroy() {
-
+	m_musicPlayer.clearMusicList();
 }
 
 
 void DemoLevel::onActivate() {
+	m_musicPlayer.addMusic("The Verdant Grove LOOP.wav");
+	m_musicPlayer.setLooping(true);
+	m_musicPlayer.play();
+
 	this->generateBackground();
 	this->generateMap();
 	this->createHero();
+
+	std::shared_ptr<Entity> fpsEntity = std::make_shared<Entity>(&m_CONTEXT);
+	fpsEntity->setPosition({5.f, 5.f});
+
+	m_FPSText = fpsEntity->addComponent<ba::Text>();
+	m_FPSText->loadFontFromFile("UbuntuMono-Bold.ttf", 16);
+	m_FPSText->setColor(ba::Color::Blue);
+
+	m_entityManager.add(fpsEntity);
 }
 
 
@@ -54,10 +69,17 @@ void DemoLevel::handleEvents() {
 }
 
 void DemoLevel::update(float deltaTime) {
+	m_musicPlayer.update();
+	int fps = static_cast<int>(std::round(1.0f / deltaTime));
+	m_FPSText->setText(std::to_string(fps) + " FPS");
+
 	m_entityManager.update(deltaTime);
 }
 
 void DemoLevel::postUpdate(float deltaTime) {
+	ba::FloatRect vs = m_CONTEXT.window->getViewSpace();
+	m_FPSText->getOwner()->setPosition({vs.l + 8, vs.t + 8});
+
 	m_entityManager.postUpdate(deltaTime);
 }
 

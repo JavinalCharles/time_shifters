@@ -3,6 +3,7 @@
 #include "TS/Entities/Hero.hpp"
 #include "TS/Systems/UpdateableSystem.hpp"
 
+#include <BA/Components/Text.hpp>
 #include <BA/Entities/SharedContext.hpp>
 #include <BA/Generator/TileMapGenerator.hpp>
 #include <BA/Scenes/Scene.hpp>
@@ -38,6 +39,8 @@ private:
 	void createHero();
 
 private:
+	std::shared_ptr<ba::Text> m_FPSText;
+
 	ba::EntityManager	m_entityManager;
 	ba::InputManager 	m_inputManager;
 	ba::MusicPlayer 	m_musicPlayer;

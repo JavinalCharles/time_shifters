@@ -45,7 +45,7 @@ void TSEngine::init() {
 
 
 int main() {
-	TS::TSEngine TimeShifters("Time Shifters Demo", ba::IntRect{0, 0, 1024, 768}, SDL_WINDOW_SHOWN | SDL_WINDOW_MAXIMIZED);
+	TS::TSEngine TimeShifters("Time Shifters Demo", ba::IntRect{64, 64, 962, 768}, SDL_WINDOW_SHOWN | SDL_WINDOW_MAXIMIZED);
 	TimeShifters.init();
 	TimeShifters.run();
 	TimeShifters.cleanUp();
