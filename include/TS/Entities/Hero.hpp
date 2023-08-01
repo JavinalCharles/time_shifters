@@ -43,6 +43,11 @@ private:
 	ba::Vector2f m_previousPosition;
 	ba::Vector2f m_thisPosition;
 
+	bool m_jumping = false;
+	bool m_doubleJumped = false;
+	float m_jumpedTime = 0.0f;
+
+	static const float s_MAX_JUMP_TIME;
 private:
 	static bool s_resourcesLoaded;
 	static const std::unordered_map<IDtype, std::pair<float, std::vector<std::string>>> s_resourcesToLoad;
