@@ -9,6 +9,7 @@
 #include <BA/Components/Colliders/BoxCollider.hpp>
 #include <BA/Components/KeyboardControl.hpp>
 #include <BA/Components/MouseControl.hpp>
+#include <BA/Components/SoundEmitter.hpp>
 #include <BA/Components/Sprite.hpp>
 #include <BA/Components/Velocity.hpp>
 #include <BA/Utilities/Vector2.hpp>
@@ -51,7 +52,9 @@ private:
 private:
 	static bool s_resourcesLoaded;
 	static const std::unordered_map<IDtype, std::pair<float, std::vector<std::string>>> s_resourcesToLoad;
+	static const std::unordered_map<IDtype, std::string> s_soundEffects;
 	static std::unordered_map<IDtype, std::pair<float,std::vector<IDtype>>> s_R;
+	static std::unordered_map<IDtype, IDtype> s_RFX;
 
 }; // class Hero
 

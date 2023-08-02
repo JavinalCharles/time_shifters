@@ -14,6 +14,7 @@
 #include <BA/Systems/KeyboardControlSystem.hpp>
 #include <BA/Systems/MouseControlSystem.hpp>
 #include <BA/Systems/MovementSystem.hpp>
+#include <BA/Systems/SoundSystem.hpp>
 
 namespace TS {
 
