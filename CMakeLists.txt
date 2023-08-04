@@ -10,9 +10,12 @@ project(
 set(SOURCES
 	src/TS/Components/ModifiedBoxCollider.cpp
 	src/TS/Components/Updateable.cpp
+	src/TS/Entities/Bandit.cpp
+	src/TS/Entities/Character.cpp
 	src/TS/Entities/Hero.cpp
 	src/TS/Scenes/DemoLevel.cpp
 	src/TS/Systems/UpdateableSystem.cpp
+	src/TS/Utility/Define.cpp
 	src/TS/main.cpp
 )
 
@@ -33,7 +36,7 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 
 target_compile_options(compiler_flags INTERFACE
-  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-O2>>"
+  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused;-O3>>"
   "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 

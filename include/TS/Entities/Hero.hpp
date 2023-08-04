@@ -1,7 +1,7 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <BA/Entities/Entity.hpp>
 #include <BA/Components/Animation.hpp>
@@ -19,6 +19,8 @@
 
 #include "TS/Components/ModifiedBoxCollider.hpp"
 #include "TS/Components/Updateable.hpp"
+#include "TS/Entities/Character.hpp"
+#include "TS/Utility/Define.hpp"
 
 using ba::Entity;
 using ba::IDtype;
@@ -26,13 +28,12 @@ using ba::SharedContext;
 
 namespace TS {
 
-class Hero : public Entity {
+class Hero : public Character {
 public:
 	Hero(SharedContext* context);
 
 	void updatePreviousPosition(float deltaTime);
 	const ba::Vector2f& getPreviousPosition() const;
-
 
 private:
 	void setMouseButtonBindings(std::shared_ptr<ba::MouseControl>& mc);
@@ -52,9 +53,7 @@ private:
 private:
 	static bool s_resourcesLoaded;
 	static const std::unordered_map<IDtype, std::pair<float, std::vector<std::string>>> s_resourcesToLoad;
-	static const std::unordered_map<IDtype, std::string> s_soundEffects;
 	static std::unordered_map<IDtype, std::pair<float,std::vector<IDtype>>> s_R;
-	static std::unordered_map<IDtype, IDtype> s_RFX;
 
 }; // class Hero
 

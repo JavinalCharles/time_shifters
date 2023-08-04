@@ -41,28 +41,14 @@ enum HeroAnimationss : IDtype {
 	HERO_BLOCK_EFFECT_LEFT,
 };
 
-enum SoundEffects : IDtype{
-	SILENT = 0,
-	CONCRETE_1,
-	CONCRETE_2,
-	FOREST_1,
-	FOREST_2,
-	GRASS_1,
-	GRASS_2,
-	GRAVEL_1,
-	GRAVEL_2,
-	SAND,
-	SNOW,
-};
-
-const float Y_GRAVITY = 400.f;
-const float NORMAL_SPEED = 256.f;
+// const float Y_GRAVITY = 400.f;
+// const float NORMAL_SPEED = 256.f;
+// const float SLOW_SPEED = 64.f;
 
 const float Hero::s_MAX_JUMP_TIME = 0.4f;
 
 bool Hero::s_resourcesLoaded = false;
 std::unordered_map<IDtype, std::pair<float,std::vector<IDtype>>> Hero::s_R{};
-std::unordered_map<IDtype, IDtype> Hero::s_RFX{};
 
 const std::unordered_map<IDtype, std::pair<float,std::vector<std::string>>> Hero::s_resourcesToLoad{
 	{HERO_IDLE, 
@@ -181,24 +167,11 @@ const std::unordered_map<IDtype, std::pair<float,std::vector<std::string>>> Hero
 };
 
 
-const std::unordered_map<IDtype, std::string> Hero::s_soundEffects{
-	{CONCRETE_1, 	"Footsteps/Concrete 1.wav"},
-	{CONCRETE_2, 	"Footsteps/Concrete 2.wav"},
-	{FOREST_1, 		"Footsteps/Forest 1.wav"},
-	{FOREST_2, 		"Footsteps/Forest 2.wav"},
-	{GRASS_1, 		"Footsteps/Grass 1.wav"},
-	{GRASS_2, 		"Footsteps/Grass Running.wav"},
-	{GRAVEL_1, 		"Footsteps/Gravel 1.wav"},
-	{GRAVEL_2, 		"Footsteps/Gravel - Run.wav"},
-	{SAND, 			"Footsteps/Sand.wav"},
-	{SNOW, 			"Footsteps/Snow.wav"},
-};
-
-
 Hero::Hero(SharedContext* context) :
-	Entity::Entity(context)
+	Character::Character(context)
 {
 	loadResources();
+	loadGlobalSounds(this->CONTEXT->resources);
 	
 	auto animation = this->addComponent<Animation>();
 	auto camera = this->addComponent<Camera>();
@@ -210,12 +183,12 @@ Hero::Hero(SharedContext* context) :
 	auto velocity = this->addComponent<Velocity>();
 	auto updateable = this->addComponent<Updateable>();
 	// 
-	const Vector2f COLLISION_AREA{23.F, 43.F};
+	const Vector2f COLLISION_AREA{25.F, 40.F};
 
 	// COLLIDER
 	collider->setSize(COLLISION_AREA);
-	collider->setLayer(8u);
-	collider->setOrigin({COLLISION_AREA.x / 2.f, COLLISION_AREA.y / 2.f - 7.f});
+	collider->setLayer(PLAYER_1);
+	collider->setOrigin({COLLISION_AREA.x / 2.f, COLLISION_AREA.y / 2.f - 4.f});
 	
 	// CAMERA
 	camera->setView(CONTEXT->window->getView());
@@ -262,7 +235,7 @@ void Hero::updatePreviousPosition(float deltaTime) {
 	else if (CURR == HERO_FALL || CURR == HERO_FALL_LEFT) {
 		if (this->m_thisPosition.y <= this->m_previousPosition.y) {
 			animation->set(CURR % 2 == 0 ? HERO_IDLE_LEFT : HERO_IDLE);
-			this->getComponent<SoundEmitter>()->emitSound(s_RFX.at(FOREST_1));
+			this->getComponent<SoundEmitter>()->emitSound(g_SFXR.at(FOREST_1));
 			this->m_jumping = false;
 			this->m_doubleJumped = false;
 			this->m_jumpedTime = 0.f;
@@ -276,6 +249,10 @@ void Hero::updatePreviousPosition(float deltaTime) {
 			animation->set(HERO_FALL);
 		}
 	}
+}
+
+const ba::Vector2f& Hero::getPreviousPosition() const {
+	return m_previousPosition;
 }
 
 void Hero::loadResources() {
@@ -301,12 +278,6 @@ void Hero::loadResources() {
 	s_R.insert_or_assign(HERO_BLOCK_EFFECT_LEFT, s_R.at(HERO_BLOCK_EFFECT));
 	s_R.insert_or_assign(HERO_FALL_LEFT, s_R.at(HERO_FALL));
 	s_R.insert_or_assign(HERO_JUMP_LEFT, s_R.at(HERO_JUMP));
-
-	// LOAD SOUND EFFECTS
-	for (auto& [id, str] : s_soundEffects) {
-		s_RFX.insert_or_assign(id, this->CONTEXT->resources->loadSound(str));
-	}
-
 
 	s_resourcesLoaded = true;
 }
@@ -411,9 +382,9 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 
 	auto run = std::bind([a, ki, v, this](){
 		IDtype curr = a->getCurrentAnimationID();
-		if (HERO_ATTACK_1 <= curr && curr <= HERO_BLOCK_EFFECT_LEFT) {
-			return;
-		}
+		// if (HERO_ATTACK_1 <= curr && curr <= HERO_BLOCK_EFFECT_LEFT) {
+		// 	return;
+		// }
 
 		if (ki->isKeyActive(SDLK_a)) {
 			switch (curr) {
@@ -433,6 +404,20 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 				case HERO_IDLE_LEFT:
 					a->set(HERO_RUN_LEFT);
 					v->setX(-NORMAL_SPEED);
+					break;
+				case HERO_BLOCK_IDLE:
+				case HERO_BLOCK_IDLE_LEFT:
+					a->set(HERO_BLOCK_IDLE_LEFT);
+					v->setX(-SLOW_SPEED);
+					break;
+				case HERO_ATTACK_1:
+				case HERO_ATTACK_1_LEFT:
+				case HERO_ATTACK_2:
+				case HERO_ATTACK_2_LEFT:
+				case HERO_ATTACK_3:
+				case HERO_ATTACK_3_LEFT:
+					v->setX(-SLOW_SPEED);
+					break;
 			}
 		}
 		else if (ki->isKeyActive(SDLK_d)) {
@@ -453,6 +438,20 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 				case HERO_IDLE_LEFT:
 					a->set(HERO_RUN);
 					v->setX(NORMAL_SPEED);
+					break;
+				case HERO_BLOCK_IDLE:
+				case HERO_BLOCK_IDLE_LEFT:
+					a->set(HERO_BLOCK_IDLE);
+					v->setX(SLOW_SPEED);
+					break;
+				case HERO_ATTACK_1:
+				case HERO_ATTACK_1_LEFT:
+				case HERO_ATTACK_2:
+				case HERO_ATTACK_2_LEFT:
+				case HERO_ATTACK_3:
+				case HERO_ATTACK_3_LEFT:
+					v->setX(SLOW_SPEED);
+					break;
 			}
 		}
 	});
@@ -460,9 +459,9 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 
 	auto idle = std::bind([a, ki, v]() {
 		IDtype curr = a->getCurrentAnimationID();
-		if (HERO_ATTACK_1 <= curr && curr <= HERO_BLOCK_EFFECT_LEFT) {
-			return;
-		}
+		// if (HERO_ATTACK_1 <= curr && curr <= HERO_BLOCK_EFFECT_LEFT) {
+		// 	return;
+		// }
 
 		if (ki->isKeyActive(SDLK_a) || ki->isKeyActive(SDLK_d)) {
 			return;
@@ -477,6 +476,13 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 			case HERO_RUN_LEFT:
 				a->set(HERO_IDLE_LEFT);
 				break;
+			// case HERO_ATTACK_1:
+			// case HERO_ATTACK_1_LEFT:
+			// case HERO_ATTACK_2:
+			// case HERO_ATTACK_2_LEFT:
+			// case HERO_ATTACK_3:
+			// case HERO_ATTACK_3_LEFT:
+			// 	// TODO SOMETHING
 			// OTHERS
 		}
 
@@ -498,14 +504,13 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 	};
 	
 	for (auto& [animationID, pair] : s_R) {
-		const float ANIMATION_TIME = pair.first / pair.second.size();
+		const float SECONDS_PER_FRAME = pair.first / pair.second.size();
 		Sequence s;
 		for (const auto& RES_ID : pair.second) {
 			s.frames.push_back(Frame{
 				RES_ID,
 				animationID%2==0 ? LEFT_RECT : RECT,
-				ANIMATION_TIME,
-				{}
+				SECONDS_PER_FRAME,
 			});	
 		}
 		s.looped = true;
@@ -513,34 +518,34 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		a->add(animationID, s);
 	}
 
-	ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
-	ba::KeyboardInput* ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>().get();
-	auto s = this->getComponent<SoundEmitter>();
-	auto v = this->getComponent<Velocity>();
+	[[maybe_unused]] ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
+	[[maybe_unused]] ba::KeyboardInput* ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>().get();
+	[[maybe_unused]] auto s = this->getComponent<SoundEmitter>();
+	[[maybe_unused]] auto v = this->getComponent<Velocity>();
 	
 
-	auto to2ndAttack = std::bind([a, mi, ki]() {
-		IDtype curr = a->getCurrentAnimationID();
-		const bool NEXT_IS_RIGHT = ki->isKeyActive(SDLK_d) ? true : (ki->isKeyActive(SDLK_a) ? false : (curr == HERO_ATTACK_1 ? true : false));
-		IDtype next = mi->isButtonActive(ba::MouseButton::LEFT) ? (NEXT_IS_RIGHT ? HERO_ATTACK_2 : HERO_ATTACK_2_LEFT) : (NEXT_IS_RIGHT ? HERO_IDLE : HERO_IDLE_LEFT);
+	// auto to2ndAttack = std::bind([a, mi, ki]() {
+	// 	IDtype curr = a->getCurrentAnimationID();
+	// 	const bool NEXT_IS_RIGHT = ki->isKeyActive(SDLK_d) ? true : (ki->isKeyActive(SDLK_a) ? false : (curr == HERO_ATTACK_1 ? true : false));
+	// 	IDtype next = mi->isButtonActive(ba::MouseButton::LEFT) ? (NEXT_IS_RIGHT ? HERO_ATTACK_2 : HERO_ATTACK_2_LEFT) : (NEXT_IS_RIGHT ? HERO_IDLE : HERO_IDLE_LEFT);
 
-		a->set(next);
-	});
+	// 	a->set(next);
+	// });
 
-	auto to3rdAttack = std::bind([a, mi, ki]() {
-		IDtype curr = a->getCurrentAnimationID();
-		const bool NEXT_IS_RIGHT = ki->isKeyActive(SDLK_d) ? true : (ki->isKeyActive(SDLK_a) ? false : (curr == HERO_ATTACK_2 ? true : false));
-		IDtype next = mi->isButtonActive(ba::MouseButton::LEFT) ? (NEXT_IS_RIGHT ? HERO_ATTACK_3 : HERO_ATTACK_3_LEFT) : (NEXT_IS_RIGHT ? HERO_IDLE : HERO_IDLE_LEFT);
+	// auto to3rdAttack = std::bind([a, mi, ki]() {
+	// 	IDtype curr = a->getCurrentAnimationID();
+	// 	const bool NEXT_IS_RIGHT = ki->isKeyActive(SDLK_d) ? true : (ki->isKeyActive(SDLK_a) ? false : (curr == HERO_ATTACK_2 ? true : false));
+	// 	IDtype next = mi->isButtonActive(ba::MouseButton::LEFT) ? (NEXT_IS_RIGHT ? HERO_ATTACK_3 : HERO_ATTACK_3_LEFT) : (NEXT_IS_RIGHT ? HERO_IDLE : HERO_IDLE_LEFT);
 
-		a->set(next);
-	});
+	// 	a->set(next);
+	// });
 
-	auto end3rdAttack = std::bind([a, ki]() {
-		IDtype curr = a->getCurrentAnimationID();
-		const bool NEXT_IS_RIGHT = ki->isKeyActive(SDLK_d) ? true : (ki->isKeyActive(SDLK_a) ? false : (curr == HERO_ATTACK_3 ? true : false));
+	// auto end3rdAttack = std::bind([a, ki]() {
+	// 	IDtype curr = a->getCurrentAnimationID();
+	// 	const bool NEXT_IS_RIGHT = ki->isKeyActive(SDLK_d) ? true : (ki->isKeyActive(SDLK_a) ? false : (curr == HERO_ATTACK_3 ? true : false));
 		
-		a->set(NEXT_IS_RIGHT ? HERO_IDLE : HERO_IDLE_LEFT);
-	});
+	// 	a->set(NEXT_IS_RIGHT ? HERO_IDLE : HERO_IDLE_LEFT);
+	// });
 
 	auto fromEffectToIdleBlock = std::bind([mi, a](){
 		IDtype curr = a->getCurrentAnimationID();
@@ -549,6 +554,63 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		}
 		else {
 			a->set(curr == HERO_BLOCK_EFFECT ? HERO_IDLE : HERO_IDLE_LEFT);
+		}
+	});
+
+	auto from1stTransitionTo2ndAttack = std::bind([mi, ki, a]() {
+		IDtype curr = a->getCurrentAnimationID();
+		float deltaTimeClicked = mi->timeSinceLastClicked(ba::MouseButton::LEFT);
+		if (0 <= deltaTimeClicked && deltaTimeClicked <= 0.48) {
+			if (ki->isKeyActive(SDLK_a)) {
+				a->set(HERO_ATTACK_2_LEFT);
+			}
+			else if (ki->isKeyActive(SDLK_d)){
+				a->set(HERO_ATTACK_2);
+			}
+			else {
+				a->set(curr % 2 == 0 ? HERO_ATTACK_2_LEFT : HERO_ATTACK_2);
+			}
+		}
+		else {
+			a->set(curr % 2 == 0 ? HERO_IDLE_LEFT : HERO_IDLE);
+		}
+	});
+
+	auto from2ndTransitionTo3rdAttack = std::bind([mi, ki, a]() {
+		IDtype curr = a->getCurrentAnimationID();
+		float deltaTimeClicked = mi->timeSinceLastClicked(ba::MouseButton::LEFT);
+		if (0 <= deltaTimeClicked && deltaTimeClicked <= 0.48) {
+			if (ki->isKeyActive(SDLK_a)) {
+				a->set(HERO_ATTACK_3_LEFT);
+			}
+			else if (ki->isKeyActive(SDLK_d)){
+				a->set(HERO_ATTACK_3);
+			}
+			else {
+				a->set(curr % 2 == 0 ? HERO_ATTACK_3_LEFT : HERO_ATTACK_3);
+			}
+		}
+		else {
+			a->set(curr % 2 == 0 ? HERO_IDLE_LEFT : HERO_IDLE);
+		}
+	});
+
+	auto from3rdTransitionTo1stAttack = std::bind([mi, ki, a]() {
+		IDtype curr = a->getCurrentAnimationID();
+		float deltaTimeClicked = mi->timeSinceLastClicked(ba::MouseButton::LEFT);
+		if (0 <= deltaTimeClicked && deltaTimeClicked <= 0.48) {
+			if (ki->isKeyActive(SDLK_a)) {
+				a->set(HERO_ATTACK_1_LEFT);
+			}
+			else if (ki->isKeyActive(SDLK_d)){
+				a->set(HERO_ATTACK_1);
+			}
+			else {
+				a->set(curr % 2 == 0 ? HERO_ATTACK_1_LEFT : HERO_ATTACK_1);
+			}
+		}
+		else {
+			a->set(curr % 2 == 0 ? HERO_IDLE_LEFT : HERO_IDLE);
 		}
 	});
 
@@ -571,7 +633,7 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		}
 	});
 
-	IDtype forestSFX = s_RFX.at(FOREST_1);
+	IDtype forestSFX = g_SFXR.at(FOREST_1);
 	auto emitForestSFX = std::bind([s, forestSFX]() {
 		s->emitSound(forestSFX);
 	});
@@ -585,23 +647,23 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 	a->addFrameAction(HERO_RUN, 8, emitForestSFX);
 	a->addFrameAction(HERO_RUN_LEFT, 4, emitForestSFX);
 	a->addFrameAction(HERO_RUN_LEFT, 8, emitForestSFX);
-	a->addFrameAction(HERO_ATTACK_1, 5, to2ndAttack);
-	a->addFrameAction(HERO_ATTACK_1_LEFT, 5, to2ndAttack);
-	a->addFrameAction(HERO_ATTACK_2, 5, to3rdAttack);
-	a->addFrameAction(HERO_ATTACK_2_LEFT, 5, to3rdAttack);
-	a->addFrameAction(HERO_ATTACK_3, 7, end3rdAttack);
-	a->addFrameAction(HERO_ATTACK_3_LEFT, 7, end3rdAttack);
-	a->addFrameAction(HERO_BLOCK_EFFECT, 4, fromEffectToIdleBlock);
-	a->addFrameAction(HERO_BLOCK_EFFECT_LEFT, 4, fromEffectToIdleBlock);
 
-	// a->addFrameAction(HERO_FALL, 0, fromFallToIdle);
-	// a->addFrameAction(HERO_FALL, 1, fromFallToIdle);
-	// a->addFrameAction(HERO_FALL, 2, fromFallToIdle);
-	// a->addFrameAction(HERO_FALL, 3, fromFallToIdle);
-	// a->addFrameAction(HERO_FALL_LEFT, 0, fromFallToIdle);
-	// a->addFrameAction(HERO_FALL_LEFT, 1, fromFallToIdle);
-	// a->addFrameAction(HERO_FALL_LEFT, 2, fromFallToIdle);
-	// a->addFrameAction(HERO_FALL_LEFT, 3, fromFallToIdle);
+	a->addSequenceAction(HERO_ATTACK_1, from1stTransitionTo2ndAttack);
+	a->addSequenceAction(HERO_ATTACK_1_LEFT, from1stTransitionTo2ndAttack);
+	a->addSequenceAction(HERO_ATTACK_2, from2ndTransitionTo3rdAttack);
+	a->addSequenceAction(HERO_ATTACK_2_LEFT, from2ndTransitionTo3rdAttack);
+	a->addSequenceAction(HERO_ATTACK_3, from3rdTransitionTo1stAttack);
+	a->addSequenceAction(HERO_ATTACK_3_LEFT, from3rdTransitionTo1stAttack);
+
+
+	// a->addFrameAction(HERO_ATTACK_1, 5, to2ndAttack);
+	// a->addFrameAction(HERO_ATTACK_1_LEFT, 5, to2ndAttack);
+	// a->addFrameAction(HERO_ATTACK_2, 5, to3rdAttack);
+	// a->addFrameAction(HERO_ATTACK_2_LEFT, 5, to3rdAttack);
+	// a->addFrameAction(HERO_ATTACK_3, 7, end3rdAttack);
+	// a->addFrameAction(HERO_ATTACK_3_LEFT, 7, end3rdAttack);
+	// a->addFrameAction(HERO_BLOCK_EFFECT, 4, fromEffectToIdleBlock);
+	// a->addFrameAction(HERO_BLOCK_EFFECT_LEFT, 4, fromEffectToIdleBlock);
 
 
 	a->set(HERO_IDLE);

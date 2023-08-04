@@ -1,5 +1,9 @@
 #pragma once
 
+#include <chrono>
+#include <random>
+
+#include "TS/Entities/Bandit.hpp"
 #include "TS/Entities/Hero.hpp"
 #include "TS/Systems/UpdateableSystem.hpp"
 
@@ -38,6 +42,10 @@ private:
 	void generateBackground();
 	void generateMap();
 	void createHero();
+	void spawnBandit();
+
+
+	int generateRandom();
 
 private:
 	std::shared_ptr<ba::Text> m_FPSText;
@@ -47,6 +55,12 @@ private:
 	ba::MusicPlayer 	m_musicPlayer;
 
 	std::vector<std::shared_ptr<Entity>> m_rollingBackgrounds;
+	std::vector<ba::Vector2f> m_spawnPoints;
+
+	std::mt19937		m_engine;
+	std::uniform_int_distribution<int> m_distributor;
+
+	float 				m_secondsSinceLastSpawn = 0.0f;
 }; // class DemoLevel
 
 } // namespace TS

@@ -4,7 +4,9 @@ namespace TS {
 
 DemoLevel::DemoLevel() :
 	ba::Scene::Scene(),
-	m_musicPlayer(nullptr)
+	m_musicPlayer(nullptr),
+	m_engine(std::chrono::system_clock::now().time_since_epoch().count()),
+	m_distributor(0, 3)
 {
 	m_CONTEXT.entities = &m_entityManager;
 	m_CONTEXT.inputs = &m_inputManager;
@@ -13,7 +15,9 @@ DemoLevel::DemoLevel() :
 
 DemoLevel::DemoLevel(ba::Window* window, ba::ResourceManager* resources, ba::SceneManager* sceneManager) :
 	ba::Scene::Scene(window, resources, sceneManager),
-	m_musicPlayer(resources)
+	m_musicPlayer(resources),
+	m_engine(std::chrono::system_clock::now().time_since_epoch().count()),
+	m_distributor(0, 3)
 {
 	m_CONTEXT.entities = &m_entityManager;
 	m_CONTEXT.inputs = &m_inputManager;
@@ -24,20 +28,40 @@ void DemoLevel::onCreate() {
 	m_CONTEXT.inputs->addInput<ba::KeyboardInput>();
 	m_CONTEXT.inputs->addInput<ba::MouseInput>();
 
+	m_entityManager.includeSystem<ba::MovementSystem>();
+	m_entityManager.includeSystem<TS::UpdateableSystem>();
 	m_entityManager.includeSystem<ba::AnimationSystem>();
 	m_entityManager.includeSystem<ba::CameraSystem>();
-	m_entityManager.includeSystem<ba::CollisionSystem>();
 	m_entityManager.includeSystem<ba::KeyboardControlSystem>();
 	m_entityManager.includeSystem<ba::MouseControlSystem>();
-	m_entityManager.includeSystem<ba::MovementSystem>();
 	m_entityManager.includeSystem<ba::SoundSystem>();
-	m_entityManager.includeSystem<TS::UpdateableSystem>();
+	m_entityManager.includeSystem<ba::CollisionSystem>();
 
 	auto cs = m_entityManager.getSystem<ba::CollisionSystem>();
-	cs->addCollisionLayer(1u);
-	cs->addCollisionLayer(8u);
-	cs->setCollision(1u, 8u); // Tile Collision
-	cs->setCollision(8u, 1u); // Player Collision
+	
+	cs->addCollisionLayer(PLAYER_1);
+	cs->addCollisionLayer(NPC_1);
+	cs->addCollisionLayer(TILE_1);
+	cs->addCollisionLayer(TILE_2);
+	cs->addCollisionLayer(TILE_3);
+	// Tile Collision
+	cs->setCollision(TILE_2, PLAYER_1);
+	cs->setCollision(TILE_1, PLAYER_1);
+	cs->setCollision(TILE_3, PLAYER_1);
+	cs->setCollision(TILE_2, NPC_1);
+	cs->setCollision(TILE_1, NPC_1);
+	cs->setCollision(TILE_3, NPC_1);
+	// Playe Collision
+	cs->setCollision(PLAYER_1, TILE_1);
+	cs->setCollision(PLAYER_1, TILE_2);
+	cs->setCollision(PLAYER_1, TILE_3);
+	cs->setCollision(PLAYER_1, NPC_1);
+	// NPC Collision
+	cs->setCollision(NPC_1, TILE_1);
+	cs->setCollision(NPC_1, TILE_2);
+	cs->setCollision(NPC_1, TILE_3);
+	cs->setCollision(NPC_1, PLAYER_1);
+	cs->setCollision(NPC_1, NPC_1);
 }
 
 void DemoLevel::onDestroy() {
@@ -58,6 +82,7 @@ void DemoLevel::onActivate() {
 	fpsEntity->setPosition({5.f, 5.f});
 
 	m_FPSText = fpsEntity->addComponent<ba::Text>();
+	m_FPSText->setDrawLayer(32);
 	m_FPSText->loadFontFromFile("UbuntuMono-Bold.ttf", 16);
 	m_FPSText->setColor(ba::Color::Blue);
 
@@ -70,6 +95,12 @@ void DemoLevel::handleEvents() {
 }
 
 void DemoLevel::update(float deltaTime) {
+	m_secondsSinceLastSpawn += deltaTime;
+	if (m_secondsSinceLastSpawn > 6.f) {
+		spawnBandit();
+		m_secondsSinceLastSpawn -= 6.f;
+	}
+
 	m_musicPlayer.update();
 	int fps = static_cast<int>(std::round(1.0f / deltaTime));
 	m_FPSText->setText(std::to_string(fps) + " FPS");
@@ -157,15 +188,44 @@ void DemoLevel::generateMap() {
 	path p = m_CONTEXT.resources->getBaseDirectory() / path("Textures") / path("oak_forest.tmx");
 
 	std::vector<std::shared_ptr<Entity>> entities = ba::generator::parseMap(p.string(), SCALE, &m_CONTEXT);
+	std::vector<std::pair<int, ba::Vector2f>> objects = ba::generator::getObjects(p.string());
 
 	m_CONTEXT.entities->add(entities);
+	for (auto& pair : objects) {
+		m_spawnPoints.push_back({
+			pair.second.x * SCALE.x,
+			pair.second.y * SCALE.y
+		});
+	}
 }
 
 
 void DemoLevel::createHero() {
 	std::shared_ptr<Hero>  hero = std::make_shared<Hero>(&m_CONTEXT);
 
+	int n = this->generateRandom();
+	hero->setPosition(m_spawnPoints.at(n));
+
 	m_entityManager.add(hero);
+}
+
+void DemoLevel::spawnBandit() {
+	std::shared_ptr<Bandit> bandit = std::make_shared<Bandit>(&m_CONTEXT);
+
+	// Choose random spawn point that is outside the current viewSpace
+	ba::FloatRect vs = m_CONTEXT.window->getViewSpace();
+	int rn = generateRandom();
+	while(vs.contains(m_spawnPoints.at(rn))) {
+		rn = generateRandom();
+	}
+
+	bandit->setPosition(m_spawnPoints.at(rn));
+	m_entityManager.add(bandit);
+	std::clog << "Spawned a bandit at: (" << m_spawnPoints.at(rn).x << ", " << m_spawnPoints.at(rn).y << ")\n";
+}
+
+int DemoLevel::generateRandom() {
+	return m_distributor(m_engine);
 }
 
 }// namespace TS
