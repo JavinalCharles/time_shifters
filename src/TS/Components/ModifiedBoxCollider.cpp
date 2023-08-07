@@ -10,7 +10,6 @@ ModifiedBoxCollider::ModifiedBoxCollider(ba::Entity* owner) :
 
 }
 
-
 void ModifiedBoxCollider::setOrigin(const ba::Vector2f& origin) {
 	m_origin = origin;
 }

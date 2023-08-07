@@ -18,8 +18,9 @@ public:
 	unsigned getMaxHP() const;
 
 private:
-	unsigned m_hp		= 20u;
 	unsigned m_maxHP	= 20u;
+	unsigned m_hp		= 20u;
+	
 
 }; // class Character
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <chrono>
+#include <functional>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -17,6 +20,7 @@
 #include <BA/Utilities/Vector2.hpp>
 #include <BA/Types.hpp>
 
+#include "TS/Components/ModifiedBoxCollider.hpp"
 #include "TS/Entities/Character.hpp"
 #include "TS/Utility/Define.hpp"
 
@@ -28,9 +32,23 @@ class Bandit : public Character {
 public:
 	Bandit(ba::SharedContext* context);
 
+	enum State : IDtype {
+		IDLE,
+		AWARE,
+		COMBAT,
+		DEAD
+	};
+
 private:
 	void loadResources();
 	void populateAnimations();
+	void programAIBehavior();
+
+private:
+	State	m_currentState = State::IDLE;
+	float 	m_targetX = 0.f;
+	float	m_timeSinceLastPrompt = 0.f;			
+
 
 private:
 	static bool s_resourcesLoaded;
@@ -39,6 +57,11 @@ private:
 	static const ba::IntRect		s_RECT_RIGHT;
 
 	static std::unordered_map<IDtype, std::pair<float, std::vector<IDtype>>> s_TR;
+
+	static std::mt19937							s_engine;
+	static std::uniform_int_distribution<int> 	s_distributor;
+	static std::uniform_int_distribution<int> 	s_floater;
+	
 }; // class Bandit
 
 } // namespace TS

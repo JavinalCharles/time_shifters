@@ -28,16 +28,19 @@ void DemoLevel::onCreate() {
 	m_CONTEXT.inputs->addInput<ba::KeyboardInput>();
 	m_CONTEXT.inputs->addInput<ba::MouseInput>();
 
-	m_entityManager.includeSystem<ba::MovementSystem>();
+	m_entityManager.includeSystem<ba::AISystem>();
+	// m_entityManager.includeSystem<ba::MovementSystem>();
+	m_entityManager.includeSystem<ba::VelocityWithCollisionSystem>();
 	m_entityManager.includeSystem<TS::UpdateableSystem>();
 	m_entityManager.includeSystem<ba::AnimationSystem>();
 	m_entityManager.includeSystem<ba::CameraSystem>();
 	m_entityManager.includeSystem<ba::KeyboardControlSystem>();
 	m_entityManager.includeSystem<ba::MouseControlSystem>();
 	m_entityManager.includeSystem<ba::SoundSystem>();
-	m_entityManager.includeSystem<ba::CollisionSystem>();
+	// m_entityManager.includeSystem<ba::CollisionSystem>();
+	
 
-	auto cs = m_entityManager.getSystem<ba::CollisionSystem>();
+	auto cs = m_entityManager.getSystem<ba::VelocityWithCollisionSystem>();
 	
 	cs->addCollisionLayer(PLAYER_1);
 	cs->addCollisionLayer(NPC_1);
@@ -55,13 +58,13 @@ void DemoLevel::onCreate() {
 	cs->setCollision(PLAYER_1, TILE_1);
 	cs->setCollision(PLAYER_1, TILE_2);
 	cs->setCollision(PLAYER_1, TILE_3);
-	cs->setCollision(PLAYER_1, NPC_1);
+	// cs->setCollision(PLAYER_1, NPC_1);
 	// NPC Collision
 	cs->setCollision(NPC_1, TILE_1);
 	cs->setCollision(NPC_1, TILE_2);
 	cs->setCollision(NPC_1, TILE_3);
-	cs->setCollision(NPC_1, PLAYER_1);
-	cs->setCollision(NPC_1, NPC_1);
+	// cs->setCollision(NPC_1, PLAYER_1);
+	// cs->setCollision(NPC_1, NPC_1);
 }
 
 void DemoLevel::onDestroy() {
@@ -87,6 +90,8 @@ void DemoLevel::onActivate() {
 	m_FPSText->setColor(ba::Color::Blue);
 
 	m_entityManager.add(fpsEntity);
+
+	spawnBandit();
 }
 
 
@@ -221,7 +226,7 @@ void DemoLevel::spawnBandit() {
 
 	bandit->setPosition(m_spawnPoints.at(rn));
 	m_entityManager.add(bandit);
-	std::clog << "Spawned a bandit at: (" << m_spawnPoints.at(rn).x << ", " << m_spawnPoints.at(rn).y << ")\n";
+	std::clog << "Spawned Bandit #" << bandit->ID <<" at: (" << m_spawnPoints.at(rn).x << ", " << m_spawnPoints.at(rn).y << ")\n";
 }
 
 int DemoLevel::generateRandom() {

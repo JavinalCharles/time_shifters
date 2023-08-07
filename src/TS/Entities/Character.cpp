@@ -3,7 +3,9 @@
 namespace TS {
 
 Character::Character(ba::SharedContext* context) :
-	ba::Entity::Entity(context)
+	ba::Entity::Entity(context),
+	m_maxHP(20),
+	m_hp(20)
 {
 
 }

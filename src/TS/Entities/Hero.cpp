@@ -183,7 +183,7 @@ Hero::Hero(SharedContext* context) :
 	auto velocity = this->addComponent<Velocity>();
 	auto updateable = this->addComponent<Updateable>();
 	// 
-	const Vector2f COLLISION_AREA{25.F, 40.F};
+	const Vector2f COLLISION_AREA{22.F, 42.F};
 
 	// COLLIDER
 	collider->setSize(COLLISION_AREA);
