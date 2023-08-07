@@ -9,7 +9,7 @@ using ba::IDtype;
 
 namespace TS {
 
-const float Y_GRAVITY = 400.f;
+const float Y_GRAVITY = 512.f;
 const float NORMAL_SPEED = 256.f;
 const float SLOW_SPEED = 64.f;
 
