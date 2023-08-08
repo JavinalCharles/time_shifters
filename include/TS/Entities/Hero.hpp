@@ -13,6 +13,7 @@
 #include <BA/Components/Sprite.hpp>
 #include <BA/Components/Velocity.hpp>
 #include <BA/Utilities/Vector2.hpp>
+#include <BA/Systems/EntityManager.hpp>
 #include <BA/Types.hpp>
 
 #include <SDL2/SDL_keycode.h>
@@ -20,6 +21,7 @@
 #include "TS/Components/ModifiedBoxCollider.hpp"
 #include "TS/Components/Updateable.hpp"
 #include "TS/Entities/Character.hpp"
+#include "TS/Entities/SlideDust.hpp"
 #include "TS/Utility/Define.hpp"
 
 using ba::Entity;
@@ -40,6 +42,8 @@ private:
 	void setKeyBindings(std::shared_ptr<ba::KeyboardControl>& kc);
 	void populateAnimation(std::shared_ptr<ba::Animation>& a);
 	void loadResources();
+
+	void spawnDust();
 
 private:
 	ba::Vector2f m_previousPosition;

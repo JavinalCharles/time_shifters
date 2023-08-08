@@ -13,6 +13,7 @@ set(SOURCES
 	src/TS/Entities/Bandit.cpp
 	src/TS/Entities/Character.cpp
 	src/TS/Entities/Hero.cpp
+	src/TS/Entities/SlideDust.cpp
 	src/TS/Scenes/DemoLevel.cpp
 	src/TS/Systems/UpdateableSystem.cpp
 	src/TS/Utility/Define.cpp

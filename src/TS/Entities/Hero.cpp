@@ -334,30 +334,38 @@ const ba::Vector2f& Hero::getPreviousPosition() const {
 	return m_previousPosition;
 }
 
+void Hero::spawnDust() {
+	ba::SharedContext* context = const_cast<ba::SharedContext*>(this->CONTEXT);
+	const auto collider = this->getCollider();
+	const auto animation = this->getComponent<Animation>();
+	const IDtype curr = animation->getCurrentAnimationID();
+	FloatRect gb = collider->getGlobalBounds();
+
+	std::shared_ptr<SlideDust> dustEntity = std::make_shared<SlideDust>(context);
+
+	dustEntity->setPosition((curr % 2 == 0) ? 
+		Vector2f{gb.l, gb.t + gb.h} : 
+		Vector2f{gb.l + gb.w, gb.t + gb.w}
+	);
+
+	this->CONTEXT->entities->add(dustEntity);
+}
+
 void Hero::loadResources() {
-	if (s_resourcesLoaded == true) {
+	if (s_resourcesLoaded) {
 		return;
 	}
 	for (auto& [id, pair] : s_resourcesToLoad) {
+		if (!s_R.contains(id)) {
+			s_R.insert_or_assign(id, std::make_pair(pair.first, std::vector<IDtype>{}));
+			s_R.insert_or_assign(id+1, std::make_pair(pair.first, std::vector<IDtype>()));
+		}
 		for (auto& str : pair.second) {
-			if (!s_R.contains(id)) {
-				s_R.insert_or_assign(id, std::make_pair(pair.first, std::vector<IDtype>{}));
-				s_R.insert_or_assign(id+1, std::make_pair(pair.first, std::vector<IDtype>()));
-			}
 			const IDtype textureID = this->CONTEXT->resources->loadTexture(str);
 			s_R.at(id).second.push_back(textureID);
 			s_R.at(id+1).second.push_back(textureID);
 		}
 	}
-	// s_R.insert_or_assign(HERO_IDLE_LEFT, s_R.at(HERO_IDLE));
-	// s_R.insert_or_assign(HERO_RUN_LEFT, s_R.at(HERO_RUN));
-	// s_R.insert_or_assign(HERO_ATTACK_1_LEFT, s_R.at(HERO_ATTACK_1));
-	// s_R.insert_or_assign(HERO_ATTACK_2_LEFT, s_R.at(HERO_ATTACK_2));
-	// s_R.insert_or_assign(HERO_ATTACK_3_LEFT, s_R.at(HERO_ATTACK_3));
-	// s_R.insert_or_assign(HERO_BLOCK_IDLE_LEFT, s_R.at(HERO_BLOCK_IDLE));
-	// s_R.insert_or_assign(HERO_BLOCK_EFFECT_LEFT, s_R.at(HERO_BLOCK_EFFECT));
-	// s_R.insert_or_assign(HERO_FALL_LEFT, s_R.at(HERO_FALL));
-	// s_R.insert_or_assign(HERO_JUMP_LEFT, s_R.at(HERO_JUMP));
 
 	s_resourcesLoaded = true;
 }
@@ -458,15 +466,13 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 				this->m_jumpedTime = 0.0f;
 				v->setY(-Y_GRAVITY);
 				a->set(curr % 2 == 0 ? HERO_JUMP_LEFT : HERO_JUMP);
+				this->spawnDust();
 				break;
 		}
 	});
 
 	auto run = std::bind([a, ki, v, this](){
 		IDtype curr = a->getCurrentAnimationID();
-		// if (HERO_ATTACK_1 <= curr && curr <= HERO_BLOCK_EFFECT_LEFT) {
-		// 	return;
-		// }
 
 		if (ki->isKeyActive(SDLK_a)) {
 			switch (curr) {
@@ -702,6 +708,8 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		}
 	});
 
+	auto conjureDust = std::bind(&Hero::spawnDust, this);
+
 	a->addFrameAction(HERO_IDLE, 0, resetJump);
 	a->addFrameAction(HERO_IDLE_LEFT, 0, resetJump);
 	a->addFrameAction(HERO_RUN, 0, resetJump);
@@ -710,6 +718,19 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 	a->addFrameAction(HERO_RUN, 8, emitForestSFX);
 	a->addFrameAction(HERO_RUN_LEFT, 4, emitForestSFX);
 	a->addFrameAction(HERO_RUN_LEFT, 8, emitForestSFX);
+
+	a->addFrameAction(HERO_WALL_SLIDE, 0, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE, 1, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE, 2, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE, 3, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE, 4, conjureDust);
+
+	a->addFrameAction(HERO_WALL_SLIDE_LEFT, 0, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE_LEFT, 1, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE_LEFT, 2, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE_LEFT, 3, conjureDust);
+	a->addFrameAction(HERO_WALL_SLIDE_LEFT, 4, conjureDust);
+
 
 	a->addSequenceAction(HERO_ATTACK_1, from1stTransitionTo2ndAttack);
 	a->addSequenceAction(HERO_ATTACK_1_LEFT, from1stTransitionTo2ndAttack);
@@ -720,6 +741,9 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 
 	a->addSequenceAction(HERO_HURT, stillAlive);
 	a->addSequenceAction(HERO_HURT_LEFT, stillAlive);
+
+	a->addSequenceAction(HERO_WALL_SLIDE, conjureDust);
+	a->addSequenceAction(HERO_WALL_SLIDE_LEFT, conjureDust);
 
 	a->set(HERO_IDLE);
 }
