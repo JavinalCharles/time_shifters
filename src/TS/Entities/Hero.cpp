@@ -275,7 +275,9 @@ void Hero::updatePreviousPosition(float deltaTime) {
 	m_thisPosition = this->getPosition();
 
 	auto animation = this->getComponent<ba::Animation>();
+	auto collider = this->getCollider();
 	auto velocity = this->getComponent<ba::Velocity>();
+	
 	
 	const IDtype CURR = animation->getCurrentAnimationID();
 	if (this->m_jumping) {
@@ -314,6 +316,26 @@ void Hero::updatePreviousPosition(float deltaTime) {
 		}
 		else if (m_thisPosition.x < m_previousPosition.x) {
 			animation->set(HERO_FALL_LEFT);
+		}
+		else {
+			auto cs = this->CONTEXT->entities->getSystem<ba::VelocityWithCollisionSystem>();
+			FloatRect rect(collider->getGlobalBounds());
+			FloatRect onePixelWide{
+				(CURR % 2 == 0) ?  Vector2f{rect.l - 1.f, rect.t} : Vector2f{rect.l+rect.w+1.f, rect.t},
+				Vector2f{1.f, rect.h}
+			};
+			auto vc = cs->searchStatic(onePixelWide);
+			bool sideHaveTiles = false;
+			for (auto& j_collider : vc) {
+				const IDtype& layer = j_collider->getLayer();
+				if (layer == TILE_1 || layer == TILE_2 || layer == TILE_3) {
+					sideHaveTiles = true;
+					break;
+				}
+			}
+			if (!sideHaveTiles) {
+				animation->set(CURR % 2 == 0 ? HERO_FALL : HERO_FALL_LEFT);
+			}
 		}
 	}
 	else if ((m_thisPosition.y - m_previousPosition.y) > 4.f) {

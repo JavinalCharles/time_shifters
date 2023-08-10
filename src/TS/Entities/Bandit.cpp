@@ -21,7 +21,6 @@ using ba::Vector2f;
 using ba::Vector2i;
 
 
-
 namespace TS {
 
 enum BanditAnimations : IDtype {
@@ -163,14 +162,16 @@ Bandit::Bandit(ba::SharedContext* context) :
 	this->populateAnimations();
 	this->programAIBehavior();
 
-	const Vector2f COLLIDER_SIZE{24.f, 48.f};
+	sprite->setDrawLayer(30u);
+
+	const Vector2f COLLIDER_SIZE{24.f, 38.f};
 
 	collider->setSize(COLLIDER_SIZE);
 	collider->setOrigin(COLLIDER_SIZE * 0.5f);
 	collider->setLayer(NPC_1);
 
 
-	this->setOrigin({s_RECT.w / 2.f, s_RECT.h / 2.f});
+	this->setOrigin({s_RECT.w / 2.f, (s_RECT.h / 2)+3.f});
 	this->setScale({2.f, 2.f});
 
 	velocity->setMax({512.f, 512.f});
@@ -234,6 +235,7 @@ void Bandit::loadResources() {
 void Bandit::populateAnimations() {
 	auto animation = this->getComponent<Animation>();
 	auto timer = this->getComponent<Timer>();
+	auto velocity = this->getComponent<Velocity>();
 
 	for (auto& [animationID, pair] : s_TR) {
 		const float SECONDS_PER_FRAME = pair.first / pair.second.size();
@@ -264,15 +266,20 @@ void Bandit::populateAnimations() {
 		}
 	});
 
-	// ba::SequenceAction countdown = std::bind([this]() {
-	// 	if (!this->m_haveFinalCountdown) {
-	// 		this->startCountdown();
-	// 	}
-	// });
+	ba::SequenceAction dyingToDead = std::bind([ animation, velocity] () {
+		const IDtype CURR = animation->getCurrentAnimationID();
+		if (CURR < BANDIT_DYING || CURR > BANDIT_DYING_RIGHT) {
+			return;
+		}
+		animation->set(CURR % 2 == 0 ? BANDIT_DEATH_RIGHT : BANDIT_DEATH);
+		velocity->setX(0.f);
+	});
 
-	
+
 	animation->addSequenceAction(BANDIT_HURT, checkStillAlive);
 	animation->addSequenceAction(BANDIT_HURT_RIGHT, checkStillAlive);
+	animation->addSequenceAction(BANDIT_DYING, dyingToDead);
+	animation->addSequenceAction(BANDIT_DYING_RIGHT, dyingToDead);
 	animation->addSequenceAction(BANDIT_DEATH, std::bind(&Bandit::startCountdown, this));
 	animation->addSequenceAction(BANDIT_DEATH_RIGHT, std::bind(&Bandit::startCountdown, this));
 
@@ -327,14 +334,19 @@ void Bandit::programAIBehavior() {
 		return this->getHP() == 0u;
 	}, std::placeholders::_1);
 
-	ba::Behavior dieBandit = std::bind([animation](float) {
+	ba::Behavior dieBandit = std::bind([animation, velocity, this](float) {
 		const IDtype CURR = animation->getCurrentAnimationID();
 
 		if (CURR < BANDIT_DYING) {
 			animation->set(CURR % 2 == 0 ? BANDIT_DYING_RIGHT : BANDIT_DYING);
+			velocity->setX(0.f);
 		}
-		else if (CURR == BANDIT_DEATH || CURR == BANDIT_DEATH_RIGHT) {
-			// TODO
+		else if ((CURR == BANDIT_DEATH || CURR == BANDIT_DEATH_RIGHT) && !this->m_haveFinalCountdown){
+			auto timer = this->getComponent<ba::Timer>();
+			timer->setTimer([this]() {
+				this->queueForRemoval();
+			}, 8.f);
+			this->m_haveFinalCountdown = true;
 		}
 	}, std::placeholders::_1);
 
