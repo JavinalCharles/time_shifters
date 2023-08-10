@@ -49,10 +49,6 @@ enum HeroAnimationss : IDtype {
 	HERO_DEATH_LEFT,
 };
 
-// const float Y_GRAVITY = 400.f;
-// const float NORMAL_SPEED = 256.f;
-// const float SLOW_SPEED = 64.f;
-
 const float Hero::s_MAX_JUMP_TIME = 0.4f;
 
 bool Hero::s_resourcesLoaded = false;
@@ -439,7 +435,7 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 	// ba::MouseInput* mi = this->CONTEXT->inputs->getInput<ba::MouseInput>().get();
 	ba::KeyboardInput* ki = this->CONTEXT->inputs->getInput<ba::KeyboardInput>().get();
 
-	auto jump = std::bind([a, ki, v, this]() {
+	auto jump = std::bind([a, v, this]() {
 		IDtype curr = a->getCurrentAnimationID();
 		if (HERO_ATTACK_1 <= curr && curr <= HERO_BLOCK_EFFECT_LEFT) {
 			return;
@@ -471,7 +467,7 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 		}
 	});
 
-	auto run = std::bind([a, ki, v, this](){
+	auto run = std::bind([a, ki, v](){
 		IDtype curr = a->getCurrentAnimationID();
 
 		if (ki->isKeyActive(SDLK_a)) {
@@ -545,7 +541,6 @@ void Hero::setKeyBindings(std::shared_ptr<KeyboardControl>& kc) {
 			}
 		}
 	});
-
 
 	auto idle = std::bind([a, ki, v]() {
 		IDtype curr = a->getCurrentAnimationID();
@@ -708,7 +703,14 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 		}
 	});
 
+	// const float ATK1_TIME = s_R.at(PLAYER_ATTACK_1).first / s_R.at(PLAYER_ATTACK_1).second.size();
+	// const float ATK2_TIME = s_R.at(PLAYER_ATTACK_2).first / s_R.at(PLAYER_ATTACK_2).second.size();
+	// const float ATK3_TIME = s_R.at(PLAYER_ATTACK_3).first / s_R.at(PLAYER_ATTACK_3).second.size();
+
 	auto conjureDust = std::bind(&Hero::spawnDust, this);
+	
+	auto damageEntities = std::bind(&Hero::attack, this);
+
 
 	a->addFrameAction(HERO_IDLE, 0, resetJump);
 	a->addFrameAction(HERO_IDLE_LEFT, 0, resetJump);
@@ -731,6 +733,14 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 	a->addFrameAction(HERO_WALL_SLIDE_LEFT, 3, conjureDust);
 	a->addFrameAction(HERO_WALL_SLIDE_LEFT, 4, conjureDust);
 
+	a->addFrameAction(HERO_ATTACK_1, 2, damageEntities);
+	a->addFrameAction(HERO_ATTACK_1_LEFT, 2, damageEntities);
+
+	a->addFrameAction(HERO_ATTACK_2, 1, damageEntities);
+	a->addFrameAction(HERO_ATTACK_2_LEFT, 1, damageEntities);
+
+	a->addFrameAction(HERO_ATTACK_3, 2, damageEntities);
+	a->addFrameAction(HERO_ATTACK_3_LEFT, 2, damageEntities);
 
 	a->addSequenceAction(HERO_ATTACK_1, from1stTransitionTo2ndAttack);
 	a->addSequenceAction(HERO_ATTACK_1_LEFT, from1stTransitionTo2ndAttack);
@@ -748,6 +758,25 @@ void Hero::populateAnimation(std::shared_ptr<Animation>& a) {
 	a->set(HERO_IDLE);
 }
 
+void Hero::attack() {
+	auto cs = this->CONTEXT->entities->getSystem<ba::VelocityWithCollisionSystem>();
 
+	auto animation = this->getComponent<Animation>();
+	auto collider = this->getCollider();
+	const IDtype& CURR = animation->getCurrentAnimationID();
+
+	FloatRect gb = collider->getGlobalBounds();
+	gb.l += (CURR % 2 == 0) ? -gb.w : gb.w;
+
+	auto objectsFound = cs->searchNonStatic(gb);
+	for (auto& j_collider : objectsFound) {
+		if ((j_collider->getLayer() & (NPC_1 | NPC_2 | NPC_3)) != 0) {
+			auto e2 = std::dynamic_pointer_cast<Character>(this->CONTEXT->entities->at(j_collider->getOwner()->ID));
+			if (e2 != nullptr) {
+				e2->damage(8u);
+			}
+		}
+	}
+}
 
 } // namespace TS

@@ -7,7 +7,7 @@ namespace TS {
 
 class ModifiedBoxCollider : public ba::BoxCollider {
 public:
-	ModifiedBoxCollider(ba::Entity* owner);
+	explicit ModifiedBoxCollider(ba::Entity* owner);
 
 	void setOrigin(const ba::Vector2f& origin);
 	const ba::Vector2f& getOrigin() const;

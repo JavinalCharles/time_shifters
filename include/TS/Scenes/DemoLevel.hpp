@@ -20,6 +20,7 @@
 #include <BA/Systems/MouseControlSystem.hpp>
 // #include <BA/Systems/MovementSystem.hpp>
 #include <BA/Systems/SoundSystem.hpp>
+#include <BA/Systems/TimerSystem.hpp>
 #include <BA/Systems/VelocityWithCollisionSystem.hpp>
 
 namespace TS {

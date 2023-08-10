@@ -8,6 +8,8 @@ project(
 )
 
 set(SOURCES
+	src/TS/Components/AttackBoxCollider.cpp
+	src/TS/Components/AttackCollidable.cpp
 	src/TS/Components/ModifiedBoxCollider.cpp
 	src/TS/Components/Updateable.cpp
 	src/TS/Entities/Bandit.cpp

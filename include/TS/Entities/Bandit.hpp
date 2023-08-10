@@ -15,6 +15,7 @@
 #include <BA/Components/MouseControl.hpp>
 #include <BA/Components/SoundEmitter.hpp>
 #include <BA/Components/Sprite.hpp>
+#include <BA/Components/Timer.hpp>
 #include <BA/Components/Velocity.hpp>
 #include <BA/Utilities/Rect.hpp>
 #include <BA/Utilities/Vector2.hpp>
@@ -39,16 +40,20 @@ public:
 		DEAD
 	};
 
+	virtual void damage(unsigned dmg) override;
+
 private:
 	void loadResources();
 	void populateAnimations();
 	void programAIBehavior();
 
+	void startCountdown();
 private:
 	State	m_currentState = State::IDLE;
 	float 	m_targetX = 0.f;
 	float	m_timeSinceLastPrompt = 0.f;			
 
+	bool	m_haveFinalCountdown = false;
 
 private:
 	static bool s_resourcesLoaded;

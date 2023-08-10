@@ -1,5 +1,7 @@
 #include "TS/Entities/Bandit.hpp"
 
+#include <iostream>
+
 using ba::Animation;
 using ba::Camera;
 using ba::BoxCollider;
@@ -7,6 +9,7 @@ using ba::KeyboardControl;
 using ba::MouseControl;
 using ba::Sprite;
 using ba::SoundEmitter;
+using ba::Timer;
 using ba::Velocity;
 using ba::Sequence;
 using ba::Frame;
@@ -16,6 +19,8 @@ using ba::IntRect;
 using ba::ProgrammedAI;
 using ba::Vector2f;
 using ba::Vector2i;
+
+
 
 namespace TS {
 
@@ -33,6 +38,8 @@ enum BanditAnimations : IDtype {
 	BANDIT_HURT_RIGHT,
 	BANDIT_RECOVER,
 	BANDIT_RECOVER_RIGHT,
+	BANDIT_DYING,
+	BANDIT_DYING_RIGHT,
 	BANDIT_DEATH,
 	BANDIT_DEATH_RIGHT
 };
@@ -89,7 +96,7 @@ const std::unordered_map<IDtype, std::pair<float, std::vector<std::string>>> Ban
 		}
 	},
 	{BANDIT_HURT,
-		{0.4f,
+		{0.6f,
 			{
 				"LightBandit/Hurt/LightBandit_Hurt_0.png",
 				"LightBandit/Hurt/LightBandit_Hurt_1.png",
@@ -150,6 +157,7 @@ Bandit::Bandit(ba::SharedContext* context) :
 	auto programmedAI = this->addComponent<ProgrammedAI>();
 	auto sprite = this->addComponent<Sprite>();
 	auto sound = this->addComponent<SoundEmitter>();
+	auto timer = this->addComponent<Timer>();
 	auto velocity = this->addComponent<Velocity>();
 
 	this->populateAnimations();
@@ -171,6 +179,31 @@ Bandit::Bandit(ba::SharedContext* context) :
 	animation->set(BANDIT_IDLE);
 }
 
+void Bandit::damage(unsigned dmg) {
+	Character::damage(dmg);
+	std::clog << "#" << this->ID << ": Bandit::damage(); ";
+	auto animation = this->getComponent<Animation>();
+	const IDtype CURR = animation->getCurrentAnimationID();
+	if (CURR < BANDIT_HURT) {
+		animation->set(CURR % 2 == 0 ? BANDIT_HURT_RIGHT : BANDIT_HURT);
+	}
+	std::clog << std::endl;
+}
+
+void Bandit::startCountdown() {
+	if (this->m_haveFinalCountdown) {
+		return;
+	}
+	std::clog << "#" << this->ID << ": Bandit::startCountdown();";
+	auto timer = this->getComponent<Timer>();
+	timer->setTimer(std::bind([this]() {
+		this->queueForRemoval();
+	}), 3.f, false);
+
+	this->m_haveFinalCountdown = true;
+	std::clog << std::endl;
+}
+
 void Bandit::loadResources() {
 	if (s_resourcesLoaded) {
 		return;
@@ -187,6 +220,11 @@ void Bandit::loadResources() {
 			s_TR.at(id+1u).second.push_back(loadedID);
 		}
 	}
+	s_TR.insert_or_assign(BANDIT_DYING, std::make_pair(s_TR.at(BANDIT_RECOVER).first, std::vector<IDtype>()));
+	s_TR.insert_or_assign(BANDIT_DYING_RIGHT, std::make_pair(s_TR.at(BANDIT_RECOVER).first, std::vector<IDtype>()));
+
+	s_TR.at(BANDIT_DYING).second.insert(s_TR.at(BANDIT_DYING).second.end(), s_TR.at(BANDIT_RECOVER).second.rbegin(), s_TR.at(BANDIT_RECOVER).second.rend());
+	s_TR.at(BANDIT_DYING_RIGHT).second.insert(s_TR.at(BANDIT_DYING_RIGHT).second.end(), s_TR.at(BANDIT_RECOVER_RIGHT).second.rbegin(), s_TR.at(BANDIT_RECOVER_RIGHT).second.rend());
 
 	s_engine.seed(std::chrono::system_clock::now().time_since_epoch().count());
 
@@ -195,6 +233,7 @@ void Bandit::loadResources() {
 
 void Bandit::populateAnimations() {
 	auto animation = this->getComponent<Animation>();
+	auto timer = this->getComponent<Timer>();
 
 	for (auto& [animationID, pair] : s_TR) {
 		const float SECONDS_PER_FRAME = pair.first / pair.second.size();
@@ -212,6 +251,30 @@ void Bandit::populateAnimations() {
 
 		animation->add(animationID, sequence);
 	}
+
+	ba::SequenceAction checkStillAlive = std::bind([this, animation]() {
+		const IDtype CURR = animation->getCurrentAnimationID();
+		if(this->getHP() > 0) {
+			animation->set(CURR % 2 == 0 ? BANDIT_COMBAT_IDLE_RIGHT : BANDIT_COMBAT_IDLE);
+			this->m_currentState = State::COMBAT;
+		}
+		else {
+			animation->set(CURR % 2 == 0 ? BANDIT_DYING_RIGHT : BANDIT_DYING);
+			this->m_currentState = State::DEAD;
+		}
+	});
+
+	// ba::SequenceAction countdown = std::bind([this]() {
+	// 	if (!this->m_haveFinalCountdown) {
+	// 		this->startCountdown();
+	// 	}
+	// });
+
+	
+	animation->addSequenceAction(BANDIT_HURT, checkStillAlive);
+	animation->addSequenceAction(BANDIT_HURT_RIGHT, checkStillAlive);
+	animation->addSequenceAction(BANDIT_DEATH, std::bind(&Bandit::startCountdown, this));
+	animation->addSequenceAction(BANDIT_DEATH_RIGHT, std::bind(&Bandit::startCountdown, this));
 
 	animation->set(BANDIT_IDLE);
 }
@@ -236,18 +299,47 @@ void Bandit::programAIBehavior() {
 			this->m_timeSinceLastPrompt -= 8.f;
 		}
 
-		if (std::abs(pos.x - this->m_targetX) <= 32.f) {
-			animation->set(pos.x > this->m_targetX ? BANDIT_IDLE : BANDIT_IDLE_RIGHT);
-			velocity->setX(0.f);
+		if (this->m_currentState == State::IDLE) {
+			if (std::abs(pos.x - this->m_targetX) <= 32.f) {
+				animation->set(pos.x > this->m_targetX ? BANDIT_IDLE : BANDIT_IDLE_RIGHT);
+				velocity->setX(0.f);
+			}
+			else {
+				bool GOING_LEFT = pos.x > this->m_targetX;
+				animation->set(GOING_LEFT ? BANDIT_RUN : BANDIT_RUN_RIGHT);
+				velocity->setX(GOING_LEFT ? -NORMAL_SPEED : NORMAL_SPEED);
+			}
 		}
 		else {
-			bool GOING_LEFT = pos.x > this->m_targetX;
-			animation->set(GOING_LEFT ? BANDIT_RUN : BANDIT_RUN_RIGHT);
-			velocity->setX(GOING_LEFT ? -NORMAL_SPEED : NORMAL_SPEED);
+			if (std::abs(pos.x - this->m_targetX) <= 32.f) {
+				animation->set(pos.x > this->m_targetX ? BANDIT_COMBAT_IDLE : BANDIT_COMBAT_IDLE_RIGHT);
+				velocity->setX(0.f);
+			}
+			else {
+				bool GOING_LEFT = pos.x > this->m_targetX;
+				animation->set(GOING_LEFT ? BANDIT_RUN : BANDIT_RUN_RIGHT);
+				velocity->setX(GOING_LEFT ? -NORMAL_SPEED : NORMAL_SPEED);
+			}
+		}
+	}, std::placeholders::_1);
+
+	ba::Condition isBanditDead = std::bind([this](float) -> bool {
+		return this->getHP() == 0u;
+	}, std::placeholders::_1);
+
+	ba::Behavior dieBandit = std::bind([animation](float) {
+		const IDtype CURR = animation->getCurrentAnimationID();
+
+		if (CURR < BANDIT_DYING) {
+			animation->set(CURR % 2 == 0 ? BANDIT_DYING_RIGHT : BANDIT_DYING);
+		}
+		else if (CURR == BANDIT_DEATH || CURR == BANDIT_DEATH_RIGHT) {
+			// TODO
 		}
 	}, std::placeholders::_1);
 
 	ai->assignBindings(1, isBanditAlive, behaveLikeBandit);
+	ai->assignBindings(8, isBanditDead, dieBandit);
 }
 
 } // namespace TS

@@ -11,8 +11,8 @@ public:
 	void setHp(unsigned hp);
 	void setMaxHP(unsigned maxHP);
 
-	void damage(unsigned dmg);
-	void heal(unsigned healHP);
+	virtual void damage(unsigned dmg);
+	virtual void heal(unsigned healHP);
 
 	unsigned getHP() const;
 	unsigned getMaxHP() const;

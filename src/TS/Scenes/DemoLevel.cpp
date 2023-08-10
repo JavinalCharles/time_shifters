@@ -37,34 +37,49 @@ void DemoLevel::onCreate() {
 	m_entityManager.includeSystem<ba::KeyboardControlSystem>();
 	m_entityManager.includeSystem<ba::MouseControlSystem>();
 	m_entityManager.includeSystem<ba::SoundSystem>();
+	m_entityManager.includeSystem<ba::TimerSystem>();
 	// m_entityManager.includeSystem<ba::CollisionSystem>();
 	
-
+	/************************************************
+	 * Set up collision bindings for entities.
+	*************************************************/
 	auto cs = m_entityManager.getSystem<ba::VelocityWithCollisionSystem>();
-	
-	cs->addCollisionLayer(PLAYER_1);
-	cs->addCollisionLayer(NPC_1);
-	cs->addCollisionLayer(TILE_1);
-	cs->addCollisionLayer(TILE_2);
-	cs->addCollisionLayer(TILE_3);
-	// Tile Collision
-	cs->setCollision(TILE_2, PLAYER_1);
-	cs->setCollision(TILE_1, PLAYER_1);
-	cs->setCollision(TILE_3, PLAYER_1);
-	cs->setCollision(TILE_2, NPC_1);
-	cs->setCollision(TILE_1, NPC_1);
-	cs->setCollision(TILE_3, NPC_1);
-	// Playe Collision
-	cs->setCollision(PLAYER_1, TILE_1);
-	cs->setCollision(PLAYER_1, TILE_2);
-	cs->setCollision(PLAYER_1, TILE_3);
-	// cs->setCollision(PLAYER_1, NPC_1);
-	// NPC Collision
-	cs->setCollision(NPC_1, TILE_1);
-	cs->setCollision(NPC_1, TILE_2);
-	cs->setCollision(NPC_1, TILE_3);
-	// cs->setCollision(NPC_1, PLAYER_1);
-	// cs->setCollision(NPC_1, NPC_1);
+
+	const std::bitset<128> TILE_COLLISIONS(
+		PLAYER_1 | PLAYER_2 | PLAYER_3 | NPC_1 | NPC_2 | NPC_3
+	);
+	const std::bitset<128> PLAYER_COLLISIONS(
+		TILE_1 | TILE_2 | TILE_3 | NPC_ATTACK_1 | NPC_ATTACK_2 | NPC_ATTACK_3
+	);
+	const std::bitset<128> NPC_COLLISIONS(
+		TILE_1 | TILE_2 | TILE_3 | PLAYER_ATTACK_1 | PLAYER_ATTACK_2 | PLAYER_ATTACK_3
+	);
+	const std::bitset<128> PC_ATTACK_COLLISIONS(
+		NPC_1 | NPC_2 | NPC_3
+	);
+	const std::bitset<128> NPC_ATTACK_COLLISIONS(
+		PLAYER_1 | PLAYER_2 | PLAYER_3 | JUMPING_PLAYER_1 | JUMPING_PLAYER_2 | JUMPING_PLAYER_3
+	);
+
+	cs->addCollisionLayer(PLAYER_1, PLAYER_COLLISIONS);
+	cs->addCollisionLayer(PLAYER_2, PLAYER_COLLISIONS);
+	cs->addCollisionLayer(PLAYER_3, PLAYER_COLLISIONS);
+
+	cs->addCollisionLayer(NPC_1, NPC_COLLISIONS);
+	cs->addCollisionLayer(NPC_2, NPC_COLLISIONS);
+	cs->addCollisionLayer(NPC_3, NPC_COLLISIONS);
+
+	cs->addCollisionLayer(TILE_1, TILE_COLLISIONS);
+	cs->addCollisionLayer(TILE_2, TILE_COLLISIONS);
+	cs->addCollisionLayer(TILE_3, TILE_COLLISIONS);
+
+	cs->addCollisionLayer(PLAYER_ATTACK_1, PC_ATTACK_COLLISIONS);
+	cs->addCollisionLayer(PLAYER_ATTACK_2, PC_ATTACK_COLLISIONS);
+	cs->addCollisionLayer(PLAYER_ATTACK_3, PC_ATTACK_COLLISIONS);
+
+	cs->addCollisionLayer(NPC_ATTACK_1, NPC_ATTACK_COLLISIONS);
+	cs->addCollisionLayer(NPC_ATTACK_2, NPC_ATTACK_COLLISIONS);
+	cs->addCollisionLayer(NPC_ATTACK_3, NPC_ATTACK_COLLISIONS);
 }
 
 void DemoLevel::onDestroy() {

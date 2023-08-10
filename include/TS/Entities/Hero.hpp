@@ -11,13 +11,17 @@
 #include <BA/Components/MouseControl.hpp>
 #include <BA/Components/SoundEmitter.hpp>
 #include <BA/Components/Sprite.hpp>
+#include <BA/Components/Timer.hpp>
 #include <BA/Components/Velocity.hpp>
 #include <BA/Utilities/Vector2.hpp>
 #include <BA/Systems/EntityManager.hpp>
+#include <BA/Systems/VelocityWithCollisionSystem.hpp>
 #include <BA/Types.hpp>
 
 #include <SDL2/SDL_keycode.h>
 
+#include "TS/Components/AttackBoxCollider.hpp"
+#include "TS/Components/AttackCollidable.hpp"
 #include "TS/Components/ModifiedBoxCollider.hpp"
 #include "TS/Components/Updateable.hpp"
 #include "TS/Entities/Character.hpp"
@@ -32,7 +36,7 @@ namespace TS {
 
 class Hero : public Character {
 public:
-	Hero(SharedContext* context);
+	explicit Hero(SharedContext* context);
 
 	void updatePreviousPosition(float deltaTime);
 	const ba::Vector2f& getPreviousPosition() const;
@@ -44,10 +48,11 @@ private:
 	void loadResources();
 
 	void spawnDust();
-
+	void attack();
+	// void spawnAttackLeft(float secondsToDie);
 private:
-	ba::Vector2f m_previousPosition;
 	ba::Vector2f m_thisPosition;
+	ba::Vector2f m_previousPosition;
 
 	bool m_jumping = false;
 	bool m_doubleJumped = false;
