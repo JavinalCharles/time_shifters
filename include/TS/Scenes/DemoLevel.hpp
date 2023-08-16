@@ -3,6 +3,7 @@
 #include <chrono>
 #include <random>
 
+#include "TS/Components/ScreenText.hpp"
 #include "TS/Entities/Bandit.hpp"
 #include "TS/Entities/Hero.hpp"
 #include "TS/Systems/UpdateableSystem.hpp"

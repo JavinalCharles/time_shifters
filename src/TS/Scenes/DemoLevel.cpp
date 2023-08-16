@@ -99,7 +99,7 @@ void DemoLevel::onActivate() {
 	std::shared_ptr<Entity> fpsEntity = std::make_shared<Entity>(&m_CONTEXT);
 	fpsEntity->setPosition({5.f, 5.f});
 
-	m_FPSText = fpsEntity->addComponent<ba::Text>();
+	m_FPSText = fpsEntity->addComponent<ScreenText>();
 	m_FPSText->setDrawLayer(32);
 	m_FPSText->loadFontFromFile("UbuntuMono-Bold.ttf", 16);
 	m_FPSText->setColor(ba::Color::Blue);
@@ -129,8 +129,8 @@ void DemoLevel::update(float deltaTime) {
 }
 
 void DemoLevel::postUpdate(float deltaTime) {
-	ba::FloatRect vs = m_CONTEXT.window->getViewSpace();
-	m_FPSText->getOwner()->setPosition({vs.l + 8, vs.t + 8});
+	// ba::FloatRect vs = m_CONTEXT.window->getViewSpace();
+	// m_FPSText->getOwner()->setPosition({vs.l + 8, vs.t + 8});
 
 	m_entityManager.postUpdate(deltaTime);
 }
@@ -142,6 +142,8 @@ void DemoLevel::draw(ba::Window& window) {
 		s->draw(window);
 	}
 	m_entityManager.draw(window);
+
+	m_FPSText->draw(window);
 }
 
 void DemoLevel::updateBackground(ba::Window& window) {
