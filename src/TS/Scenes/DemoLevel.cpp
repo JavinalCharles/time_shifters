@@ -28,9 +28,8 @@ void DemoLevel::onCreate() {
 	m_CONTEXT.inputs->addInput<ba::KeyboardInput>();
 	m_CONTEXT.inputs->addInput<ba::MouseInput>();
 
-	m_entityManager.includeSystem<ba::AISystem>();
-	// m_entityManager.includeSystem<ba::MovementSystem>();
 	m_entityManager.includeSystem<ba::VelocityWithCollisionSystem>();
+	m_entityManager.includeSystem<ba::AISystem>();
 	m_entityManager.includeSystem<TS::UpdateableSystem>();
 	m_entityManager.includeSystem<ba::AnimationSystem>();
 	m_entityManager.includeSystem<ba::CameraSystem>();

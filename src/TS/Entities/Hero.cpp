@@ -20,7 +20,7 @@ using ba::Vector2i;
 namespace TS {
 
 enum HeroAnimationss : IDtype {
-	NONE = 0,
+	HERO_NONE = 0,
 	HERO_IDLE,
 	HERO_IDLE_LEFT,
 	HERO_RUN,

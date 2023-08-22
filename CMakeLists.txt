@@ -10,6 +10,7 @@ project(
 set(SOURCES
 	src/TS/Components/AttackBoxCollider.cpp
 	src/TS/Components/AttackCollidable.cpp
+	src/TS/Components/BaseBanditAI.cpp
 	src/TS/Components/ModifiedBoxCollider.cpp
 	src/TS/Components/ScreenText.cpp
 	src/TS/Components/Updateable.cpp

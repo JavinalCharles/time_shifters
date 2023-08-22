@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include <vector>
 #include <BA/Entities/Entity.hpp>
-#include <BA/Components/AI/ProgrammedAI.hpp>
 #include <BA/Components/Animation.hpp>
 #include <BA/Components/Camera.hpp>
 #include <BA/Components/Colliders/BoxCollider.hpp>
@@ -21,6 +20,7 @@
 #include <BA/Utilities/Vector2.hpp>
 #include <BA/Types.hpp>
 
+#include "TS/Components/BaseBanditAI.hpp"
 #include "TS/Components/ModifiedBoxCollider.hpp"
 #include "TS/Entities/Character.hpp"
 #include "TS/Utility/Define.hpp"
@@ -29,27 +29,44 @@ using ba::IDtype;
 
 namespace TS {
 
+enum BanditAnimations : IDtype {
+	NONE = 0ul,
+	BANDIT_IDLE,
+	BANDIT_IDLE_RIGHT,
+	BANDIT_RUN,
+	BANDIT_RUN_RIGHT,
+	BANDIT_COMBAT_IDLE,
+	BANDIT_COMBAT_IDLE_RIGHT,
+	BANDIT_ATTACK,
+	BANDIT_ATTACK_RIGHT,
+	BANDIT_HURT,
+	BANDIT_HURT_RIGHT,
+	BANDIT_RECOVER,
+	BANDIT_RECOVER_RIGHT,
+	BANDIT_DYING,
+	BANDIT_DYING_RIGHT,
+	BANDIT_DEATH,
+	BANDIT_DEATH_RIGHT
+};
+
+class BaseBanditAI;
+
 class Bandit : public Character {
 public:
-	Bandit(ba::SharedContext* context);
+	friend class BaseBanditAI;
 
-	enum State : IDtype {
-		IDLE,
-		AWARE,
-		COMBAT,
-		DEAD
-	};
+	Bandit(ba::SharedContext* context);
 
 	virtual void damage(unsigned dmg) override;
 
+	
 private:
 	void loadResources();
 	void populateAnimations();
-	void programAIBehavior();
 
 	void startCountdown();
 private:
-	State	m_currentState = State::IDLE;
+	// State	m_currentState = State::IDLE;
 	float 	m_targetX = 0.f;
 	float	m_timeSinceLastPrompt = 0.f;			
 
@@ -63,9 +80,9 @@ private:
 
 	static std::unordered_map<IDtype, std::pair<float, std::vector<IDtype>>> s_TR;
 
-	static std::mt19937							s_engine;
-	static std::uniform_int_distribution<int> 	s_distributor;
-	static std::uniform_int_distribution<int> 	s_floater;
+	// static std::mt19937							s_engine;
+	// static std::uniform_int_distribution<int> 	s_distributor;
+	// static std::uniform_int_distribution<int> 	s_floater;
 	
 }; // class Bandit
 
