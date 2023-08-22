@@ -8,7 +8,8 @@ using ba::Vector2f;
 using ba::FloatRect;
 
 std::mt19937 BaseBanditAI::s_randomEngine(std::chrono::system_clock::now().time_since_epoch().count());
-std::uniform_int_distribution<int> BaseBanditAI::s_distributor{1, 512};
+std::uniform_int_distribution<int> BaseBanditAI::s_distributor(0, 1024);
+std::uniform_int_distribution<int> BaseBanditAI::s_2Dcompass(1, 2);
 
 BaseBanditAI::BaseBanditAI(ba::Entity* owner)
 	: ba::AI(owner)
@@ -41,9 +42,9 @@ void BaseBanditAI::behave(float deltaTime) {
 	switch (m_currentState) {
 		case IDLE:
 			// TODO Check if an enemy hero within sight
-			if (m_timeSinceStateChange >= 8.f) {
+			if (m_timeSinceStateChange >= 4.f) {
 				setDestinationsQueue(Vector2f(
-					pos.x + getRandomNumber(),
+					pos.x + static_cast<float>(getRandomNumber()),
 					pos.y
 				));
 				// if (!m_destinationsQueue.empty()) {
@@ -54,17 +55,18 @@ void BaseBanditAI::behave(float deltaTime) {
 		case PATROL:
 			// TDDO Check if an enemy is within sight
 			if (m_destinationsQueue.empty()) {
+				velocity->resetVelocity();
+				animation->set(CURRENT_ANIMATION%2==0?BANDIT_IDLE_RIGHT:BANDIT_IDLE);
 				changeState(IDLE);
 			}
-			else if (std::abs(pos.x - m_destinationsQueue.front().x) <= 32.f) {
-				m_destinationsQueue.pop(); // remove current destination. Go to next destination.
+			else if (std::abs(pos.x - m_destinationsQueue.front().x) <= 24.f) {
+				m_destinationsQueue.pop();
 			}
 			else {
-				const bool GOING_LEFT = pos.x > m_destinationsQueue.front().x;
-				// std::clog << "pos.x " << pos.x << " dest.x " << m_destinationsQueue.front().x << " LEFT? " << GOING_LEFT << std::endl;
-
+				const bool GOING_LEFT =  m_destinationsQueue.front().x < pos.x;
+				// std::clog << "pos.x: " << pos.x << ";dest.x: " << m_destinationsQueue.front().x << "; LEFT: " << GOING_LEFT << std::endl; 
 				animation->set(GOING_LEFT ? BANDIT_RUN: BANDIT_RUN_RIGHT);
-				velocity->setX(GOING_LEFT ? -NORMAL_SPEED : NORMAL_SPEED);
+				velocity->setX(GOING_LEFT ? -NORMAL_SPEED: NORMAL_SPEED);
 			}
 
 			break;
@@ -109,63 +111,49 @@ bool BaseBanditAI::checkIfDestinationValid(const ba::FloatRect& destRect) {
 	auto tiles = cs->searchStatic(destRect);
 	auto belowTiles = cs->searchStatic(ba::FloatRect(
 		destRect.l,
-		destRect.t + destRect.h + 1.f,
+		destRect.t + destRect.h,
 		destRect.w,
 		1.f
 	));
-	// if (!tiles.empty()) {
-	// 	return false;
-	// }
 
-	// for (auto& collider: belowTiles) {
-	// 	const IDtype collisionLayer = collider->getLayer();
-	// 	if (collisionLayer <= TILE_3) {
-	// 		return true;
-	// 	}
-	// }
 	return (tiles.empty() && !belowTiles.empty());
 }
 
 void BaseBanditAI::setDestinationsQueue(const Vector2f& finalDestination) {
-	
 	auto collider = getOwner()->getCollider();
 	const Vector2f& pos = getOwner()->getPosition();
+
 	const FloatRect bounds = collider->getGlobalBounds();
 
-	const FloatRect baseRect = {
-		bounds.w * static_cast<int>(pos.x / bounds.w),
-		bounds.t,
-		bounds.w,
-		bounds.h
-	};
-	float movement = pos.x < finalDestination.x ? bounds.w : -bounds.w;
-	FloatRect currentRect = baseRect;
+	float movement = pos.x > finalDestination.x? -bounds.w : bounds.w;
+	// std::clog << "Movement: " << movement << std::endl;
+	FloatRect currentRect = bounds;
+	currentRect.l += movement;
 	// m_destinationsQueue.push(currentVector);
 
 	do {
 		if (checkIfDestinationValid(currentRect)) {
 			m_destinationsQueue.push(Vector2f(
-				currentRect.l + (currentRect.w / 2.f),
+				currentRect.l + (currentRect.w * 0.5f),
 				pos.y
 			));
 			currentRect.l += movement;
 		}
 		else {
+			// std::clog << "Invalid rect destination: {{" << currentRect.l << ", " << currentRect.t << "}, {" << currentRect.w << ", " << currentRect.h << "}}\n";
 			break;
 		}
-	} while(m_destinationsQueue.back().distance(finalDestination) >= bounds.w);
+	}while(ba::distance(finalDestination, m_destinationsQueue.back()) > bounds.w);
 
-	std::clog << "Bandit #" << getOwner()->ID << " patrolling with " << m_destinationsQueue.size() << " nodes.\n";
+	// std::clog << "Bandit #" << getOwner()->ID << " patrolling with " << m_destinationsQueue.size() << " nodes.\n";
 }
 
 int BaseBanditAI::getRandomNumber() {
-	int gen = s_distributor(s_randomEngine);
-	if (gen <= 256) {
-		return -gen; 
-	}
-	else {
-		return gen - 256;
-	}
+	int number = s_distributor(s_randomEngine);
+	int compass = s_2Dcompass(s_randomEngine);
+
+	int res = (compass == 2 ? -number : number);
+	return res;
 }
 
 } // namespace TS

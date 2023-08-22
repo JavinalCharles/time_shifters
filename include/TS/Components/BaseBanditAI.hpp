@@ -13,6 +13,7 @@
 #include <BA/Entities/Entity.hpp>
 #include <BA/Systems/EntityManager.hpp>
 #include <BA/Systems/VelocityWithCollisionSystem.hpp>
+#include <BA/Utilities/Vector2.hpp>
 #include <BA/Types.hpp>
 
 #include "TS/Entities/Bandit.hpp"
@@ -48,6 +49,7 @@ private:
 
 	static std::mt19937 		s_randomEngine;
 	static std::uniform_int_distribution<int> s_distributor;
+	static std::uniform_int_distribution<int> s_2Dcompass;
 }; // public BaseBanditAI
 
 } // namespace TS
