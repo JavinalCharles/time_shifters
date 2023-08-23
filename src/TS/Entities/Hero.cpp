@@ -790,6 +790,8 @@ void Hero::attack() {
 	FloatRect gb = collider->getGlobalBounds();
 	gb.l += (CURR % 2 == 0) ? -gb.w : gb.w;
 
+	ba::debug << gb;
+
 	auto objectsFound = cs->searchNonStatic(gb);
 	for (auto& j_collider : objectsFound) {
 		if ((j_collider->getLayer() & (NPC_1 | NPC_2 | NPC_3)) != 0) {

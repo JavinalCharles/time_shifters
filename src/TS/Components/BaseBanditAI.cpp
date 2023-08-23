@@ -7,9 +7,9 @@ using ba::IDtype;
 using ba::Vector2f;
 using ba::FloatRect;
 
-std::mt19937 BaseBanditAI::s_randomEngine(std::chrono::system_clock::now().time_since_epoch().count());
-std::uniform_int_distribution<int> BaseBanditAI::s_distributor(0, 1024);
-std::uniform_int_distribution<int> BaseBanditAI::s_2Dcompass(1, 2);
+std::mt19937_64 BaseBanditAI::s_randomEngine(std::chrono::system_clock::now().time_since_epoch().count());
+std::binomial_distribution<int> BaseBanditAI::s_distributor(1024, 0.67);
+std::bernoulli_distribution BaseBanditAI::s_2Dcompass(0.5);
 
 BaseBanditAI::BaseBanditAI(ba::Entity* owner)
 	: ba::AI(owner)
@@ -64,7 +64,11 @@ void BaseBanditAI::behave(float deltaTime) {
 			}
 			else {
 				const bool GOING_LEFT =  m_destinationsQueue.front().x < pos.x;
-				// std::clog << "pos.x: " << pos.x << ";dest.x: " << m_destinationsQueue.front().x << "; LEFT: " << GOING_LEFT << std::endl; 
+				
+				ba::debug << ba::IntLine(
+					owner->getPosition(), m_destinationsQueue.back()
+				);
+
 				animation->set(GOING_LEFT ? BANDIT_RUN: BANDIT_RUN_RIGHT);
 				velocity->setX(GOING_LEFT ? -NORMAL_SPEED: NORMAL_SPEED);
 			}
@@ -126,10 +130,9 @@ void BaseBanditAI::setDestinationsQueue(const Vector2f& finalDestination) {
 	const FloatRect bounds = collider->getGlobalBounds();
 
 	float movement = pos.x > finalDestination.x? -bounds.w : bounds.w;
-	// std::clog << "Movement: " << movement << std::endl;
+
 	FloatRect currentRect = bounds;
 	currentRect.l += movement;
-	// m_destinationsQueue.push(currentVector);
 
 	do {
 		if (checkIfDestinationValid(currentRect)) {
@@ -137,22 +140,21 @@ void BaseBanditAI::setDestinationsQueue(const Vector2f& finalDestination) {
 				currentRect.l + (currentRect.w * 0.5f),
 				pos.y
 			));
+			ba::debug << currentRect;
 			currentRect.l += movement;
 		}
 		else {
-			// std::clog << "Invalid rect destination: {{" << currentRect.l << ", " << currentRect.t << "}, {" << currentRect.w << ", " << currentRect.h << "}}\n";
 			break;
 		}
 	}while(ba::distance(finalDestination, m_destinationsQueue.back()) > bounds.w);
 
-	// std::clog << "Bandit #" << getOwner()->ID << " patrolling with " << m_destinationsQueue.size() << " nodes.\n";
 }
 
 int BaseBanditAI::getRandomNumber() {
 	int number = s_distributor(s_randomEngine);
-	int compass = s_2Dcompass(s_randomEngine);
+	bool compass = s_2Dcompass(s_randomEngine);
 
-	int res = (compass == 2 ? -number : number);
+	int res = compass ? -number : number;
 	return res;
 }
 

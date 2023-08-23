@@ -13,8 +13,11 @@
 #include <BA/Entities/Entity.hpp>
 #include <BA/Systems/EntityManager.hpp>
 #include <BA/Systems/VelocityWithCollisionSystem.hpp>
+#include <BA/Utilities/Line.hpp>
+#include <BA/Utilities/Rect.hpp>
 #include <BA/Utilities/Vector2.hpp>
 #include <BA/Types.hpp>
+#include <BA/Tools/DebugHelper.hpp>
 
 #include "TS/Entities/Bandit.hpp"
 #include "TS/Utility/Define.hpp"
@@ -47,9 +50,9 @@ private:
 	float m_timeSinceStateChange = 0.f;
 	std::queue<ba::Vector2f> m_destinationsQueue{};
 
-	static std::mt19937 		s_randomEngine;
-	static std::uniform_int_distribution<int> s_distributor;
-	static std::uniform_int_distribution<int> s_2Dcompass;
+	static std::mt19937_64 		s_randomEngine;
+	static std::binomial_distribution<int> s_distributor;
+	static std::bernoulli_distribution s_2Dcompass;
 }; // public BaseBanditAI
 
 } // namespace TS

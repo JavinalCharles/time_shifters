@@ -135,11 +135,12 @@ void DemoLevel::postUpdate(float deltaTime) {
 }
 
 void DemoLevel::draw(ba::Window& window) {
-	this->updateBackground(window);
-	for(auto& e : m_rollingBackgrounds) {
-		auto s = e->getComponent<ba::Sprite>();
-		s->draw(window);
-	}
+	// TEMPORARILY COMMENT. DO NOT ERASE.
+	// this->updateBackground(window);
+	// for(auto& e : m_rollingBackgrounds) {
+	// 	auto s = e->getComponent<ba::Sprite>();
+	// 	s->draw(window);
+	// }
 	m_entityManager.draw(window);
 
 	m_FPSText->draw(window);
@@ -242,7 +243,7 @@ void DemoLevel::spawnBandit() {
 
 	bandit->setPosition(m_spawnPoints.at(rn));
 	m_entityManager.add(bandit);
-	std::clog << "Spawned Bandit #" << bandit->ID <<" at: (" << m_spawnPoints.at(rn).x << ", " << m_spawnPoints.at(rn).y << ")\n";
+	ba::debug << "Spawned Bandit #" << bandit->ID <<" at: (" << m_spawnPoints.at(rn).x << ", " << m_spawnPoints.at(rn).y << ")\n";
 }
 
 int DemoLevel::generateRandom() {

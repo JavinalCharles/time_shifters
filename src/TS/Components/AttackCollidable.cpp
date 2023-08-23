@@ -27,11 +27,7 @@ void AttackCollidable::onCollisionExit(ba::IDtype otherID) {
 	std::shared_ptr<TS::Bandit> ch = std::dynamic_pointer_cast<TS::Bandit>(e);
 
 	if(ch != nullptr) {
-		std::clog << "damaging Banditr #" << ch->ID << std::endl;
 		ch->damage(m_damageToDeliver);
-	}
-	else {
-		std::clog << "collided with non-Bandit #" << e->ID << std::endl;
 	}
 }
 

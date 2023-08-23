@@ -15,14 +15,13 @@
 #include <BA/Systems/AISystem.hpp>
 #include <BA/Systems/AnimationSystem.hpp>
 #include <BA/Systems/CameraSystem.hpp>
-// #include <BA/Systems/CollisionSystem.hpp>
 #include <BA/Systems/EntityManager.hpp>
 #include <BA/Systems/KeyboardControlSystem.hpp>
 #include <BA/Systems/MouseControlSystem.hpp>
-// #include <BA/Systems/MovementSystem.hpp>
 #include <BA/Systems/SoundSystem.hpp>
 #include <BA/Systems/TimerSystem.hpp>
 #include <BA/Systems/VelocityWithCollisionSystem.hpp>
+#include <BA/Tools/DebugHelper.hpp>
 
 namespace TS {
 

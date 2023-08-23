@@ -17,6 +17,7 @@
 #include <BA/Systems/EntityManager.hpp>
 #include <BA/Systems/VelocityWithCollisionSystem.hpp>
 #include <BA/Types.hpp>
+#include <BA/Tools/DebugHelper.hpp>
 
 #include <SDL2/SDL_keycode.h>
 

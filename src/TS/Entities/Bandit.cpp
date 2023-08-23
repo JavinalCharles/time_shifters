@@ -169,7 +169,7 @@ void Bandit::startCountdown() {
 	if (this->m_haveFinalCountdown) {
 		return;
 	}
-	std::clog << "#" << this->ID << ": Bandit::startCountdown();";
+	ba::debug << "#" << this->ID << ": Bandit::startCountdown();" << std::endl;
 	auto timer = this->getComponent<Timer>();
 	timer->setTimer(std::bind([this]() {
 		if (this->getHP() == 0) {
@@ -178,7 +178,6 @@ void Bandit::startCountdown() {
 	}), 3.f, false);
 
 	this->m_haveFinalCountdown = true;
-	std::clog << std::endl;
 }
 
 void Bandit::loadResources() {
