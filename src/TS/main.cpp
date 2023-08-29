@@ -48,6 +48,8 @@ int main() {
 	ba::debug.setColor(ba::Color::Green);
 
 	TS::TSEngine TimeShifters("Time Shifters Demo", ba::IntRect{64, 64, 962, 768}, SDL_WINDOW_SHOWN | SDL_WINDOW_MAXIMIZED);
+	TimeShifters.setFPSLimit(120);
+
 	TimeShifters.init();
 	TimeShifters.run();
 	TimeShifters.cleanUp();

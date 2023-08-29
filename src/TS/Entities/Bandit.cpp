@@ -160,9 +160,14 @@ void Bandit::damage(unsigned dmg) {
 	Character::damage(dmg);
 	auto animation = this->getComponent<Animation>();
 	const IDtype CURR = animation->getCurrentAnimationID();
+	m_hasBeenInCombat = true;
 	if (CURR < BANDIT_HURT) {
 		animation->set(CURR % 2 == 0 ? BANDIT_HURT_RIGHT : BANDIT_HURT);
 	}
+}
+
+bool Bandit::hasBeenInCombat() const {
+	return m_hasBeenInCombat;
 }
 
 void Bandit::startCountdown() {

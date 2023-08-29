@@ -42,7 +42,7 @@ void BaseBanditAI::behave(float deltaTime) {
 	switch (m_currentState) {
 		case IDLE:
 			// TODO Check if an enemy hero within sight
-			if (m_timeSinceStateChange >= 4.f) {
+			if (m_timeSinceStateChange >= 6.f) {
 				setDestinationsQueue(Vector2f(
 					pos.x + static_cast<float>(getRandomNumber()),
 					pos.y
@@ -56,8 +56,14 @@ void BaseBanditAI::behave(float deltaTime) {
 			// TDDO Check if an enemy is within sight
 			if (m_destinationsQueue.empty()) {
 				velocity->resetVelocity();
-				animation->set(CURRENT_ANIMATION%2==0?BANDIT_IDLE_RIGHT:BANDIT_IDLE);
-				changeState(IDLE);
+				if (owner->hasBeenInCombat()) {
+					animation->set(CURRENT_ANIMATION%2==0?BANDIT_COMBAT_IDLE_RIGHT: BANDIT_COMBAT_IDLE);
+					changeState(AWARE);
+				}
+				else {
+					animation->set(CURRENT_ANIMATION%2==0?BANDIT_IDLE_RIGHT: BANDIT_IDLE);
+					changeState(IDLE);
+				}
 			}
 			else if (std::abs(pos.x - m_destinationsQueue.front().x) <= 24.f) {
 				m_destinationsQueue.pop();
@@ -75,6 +81,16 @@ void BaseBanditAI::behave(float deltaTime) {
 
 			break;
 		case AWARE:
+			// TODO: Check if enemy is on sight.
+			if (m_timeSinceStateChange >= 3.f) {
+				setDestinationsQueue(Vector2f(
+					pos.x + static_cast<float>(getRandomNumber()),
+					pos.y
+				));
+				// if (!m_destinationsQueue.empty()) {
+				changeState(PATROL);
+				// }
+			}
 			break;
 		case ENGAGED:
 			break;

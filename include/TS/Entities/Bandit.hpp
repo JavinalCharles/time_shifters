@@ -59,6 +59,8 @@ public:
 
 	virtual void damage(unsigned dmg) override;
 
+	bool hasBeenInCombat() const;
+
 private:
 	void loadResources();
 	void populateAnimations();
@@ -70,6 +72,11 @@ private:
 	float	m_timeSinceLastPrompt = 0.f;	
 
 	bool	m_haveFinalCountdown = false;
+
+
+
+private:
+	bool m_hasBeenInCombat = false;
 
 private:
 	static bool s_resourcesLoaded;
