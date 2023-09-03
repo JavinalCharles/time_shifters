@@ -20,6 +20,7 @@ BaseBanditAI::BaseBanditAI(ba::Entity* owner)
 }
 
 void BaseBanditAI::behave(float deltaTime) {
+	// ba::debug << "BaseBanditAI::behave()" << std::endl;
 	TS::Bandit* owner = dynamic_cast<TS::Bandit*>(this->getOwner());
 	auto animation = getOwner()->getComponent<ba::Animation>();
 	auto velocity = getOwner()->getComponent<ba::Velocity>();
