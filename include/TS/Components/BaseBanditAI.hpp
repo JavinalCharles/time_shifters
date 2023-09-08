@@ -43,6 +43,7 @@ private:
 	void changeState(BanditState newState);
 	bool checkIfDestinationValid(const ba::FloatRect& destRect);
 	void setDestinationsQueue(const ba::Vector2f& finalDestination);
+	void setPatrolPath(float distance);
 
 	static int getRandomNumber();
 private:

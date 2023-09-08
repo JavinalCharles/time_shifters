@@ -207,10 +207,10 @@ void DemoLevel::generateBackground() {
 
 void DemoLevel::generateMap() {
 	const ba::Vector2f SCALE{2.f, 2.f};
-	path p = m_CONTEXT.resources->getBaseDirectory() / path("Textures") / path("oak_forest.tmx");
+	std::string tmxFilename("oak_forest.tmx");
 
-	std::vector<std::shared_ptr<Entity>> entities = ba::generator::parseMap(p.string(), SCALE, &m_CONTEXT);
-	std::vector<std::pair<int, ba::Vector2f>> objects = ba::generator::getObjects(p.string());
+	std::vector<std::shared_ptr<Entity>> entities = ba::generator::parseMap(tmxFilename, SCALE, &m_CONTEXT);
+	std::vector<std::pair<int, ba::Vector2f>> objects = ba::generator::getObjects(tmxFilename, m_CONTEXT.resources);
 
 	m_CONTEXT.entities->add(entities);
 	for (auto& pair : objects) {

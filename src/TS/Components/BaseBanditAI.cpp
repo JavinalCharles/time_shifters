@@ -9,7 +9,7 @@ using ba::FloatRect;
 
 std::mt19937_64 BaseBanditAI::s_randomEngine(std::chrono::system_clock::now().time_since_epoch().count());
 std::binomial_distribution<int> BaseBanditAI::s_distributor(1024, 0.67);
-std::bernoulli_distribution BaseBanditAI::s_2Dcompass(0.5);
+std::bernoulli_distribution BaseBanditAI::s_2Dcompass(0.4);
 
 BaseBanditAI::BaseBanditAI(ba::Entity* owner)
 	: ba::AI(owner)
@@ -43,14 +43,13 @@ void BaseBanditAI::behave(float deltaTime) {
 	switch (m_currentState) {
 		case IDLE:
 			// TODO Check if an enemy hero within sight
-			if (m_timeSinceStateChange >= 6.f) {
-				setDestinationsQueue(Vector2f(
-					pos.x + static_cast<float>(getRandomNumber()),
-					pos.y
-				));
-				// if (!m_destinationsQueue.empty()) {
+			if (m_timeSinceStateChange >= 2.f) {
+				// setDestinationsQueue(Vector2f(
+				// 	pos.x + static_cast<float>(getRandomNumber()),
+				// 	pos.y
+				// ));
+				setPatrolPath(getRandomNumber());
 				changeState(PATROL);
-				// }
 			}
 			break;
 		case PATROL:
@@ -84,13 +83,12 @@ void BaseBanditAI::behave(float deltaTime) {
 		case AWARE:
 			// TODO: Check if enemy is on sight.
 			if (m_timeSinceStateChange >= 3.f) {
-				setDestinationsQueue(Vector2f(
-					pos.x + static_cast<float>(getRandomNumber()),
-					pos.y
-				));
-				// if (!m_destinationsQueue.empty()) {
+				setPatrolPath(getRandomNumber());
+				// setDestinationsQueue(Vector2f(
+				// 	pos.x + static_cast<float>(getRandomNumber()),
+				// 	pos.y
+				// ));
 				changeState(PATROL);
-				// }
 			}
 			break;
 		case ENGAGED:
@@ -134,10 +132,43 @@ bool BaseBanditAI::checkIfDestinationValid(const ba::FloatRect& destRect) {
 		destRect.l,
 		destRect.t + destRect.h,
 		destRect.w,
-		1.f
+		2.f
 	));
 
 	return (tiles.empty() && !belowTiles.empty());
+}
+
+void BaseBanditAI::setPatrolPath(float distance) {
+	auto collider = getOwner()->getCollider();
+	const Vector2f& pos = getOwner()->getPosition();
+
+	const FloatRect bounds = collider->getGlobalBounds();
+
+	float movement = distance > 0.f ? bounds.w : -bounds.w;
+
+	FloatRect currentRect = bounds;
+	
+	bool flipped = false;
+
+	do {
+		distance -= movement;
+		currentRect.l += movement;
+		if (checkIfDestinationValid(currentRect)) {
+			m_destinationsQueue.push(Vector2f(
+				currentRect.l + (currentRect.w * 0.5f),
+				pos.y
+			));
+		}
+		else if (!flipped){
+			flipped = true;
+			movement = -(movement);
+		}
+		else {
+			break;
+		}
+		// currentRect.l += movement;
+
+	} while(std::abs(distance) > bounds.w);
 }
 
 void BaseBanditAI::setDestinationsQueue(const Vector2f& finalDestination) {
@@ -146,19 +177,19 @@ void BaseBanditAI::setDestinationsQueue(const Vector2f& finalDestination) {
 
 	const FloatRect bounds = collider->getGlobalBounds();
 
-	float movement = pos.x > finalDestination.x? -bounds.w : bounds.w;
+	float movement = pos.x > finalDestination.x ? -bounds.w : bounds.w;
 
 	FloatRect currentRect = bounds;
-	currentRect.l += movement;
+	// currentRect.l += movement;
 
 	do {
+		currentRect.l += movement;
 		if (checkIfDestinationValid(currentRect)) {
 			m_destinationsQueue.push(Vector2f(
 				currentRect.l + (currentRect.w * 0.5f),
 				pos.y
 			));
 			ba::debug << currentRect;
-			currentRect.l += movement;
 		}
 		else {
 			break;
@@ -171,7 +202,7 @@ int BaseBanditAI::getRandomNumber() {
 	int number = s_distributor(s_randomEngine);
 	bool compass = s_2Dcompass(s_randomEngine);
 
-	int res = compass ? -number : number;
+	int res = compass == true ? number : -number;
 	return res;
 }
 
